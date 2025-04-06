@@ -18,11 +18,11 @@ private:
     int hash_function(string name)
     {
         int hash = 0;
-        for (char c : name)
+        for (char ch : name)
         {
-            hash = (hash + c) % bucket_count;
+            hash += static_cast<int>(ch); 
         }
-        return hash;
+        return hash % bucket_count; 
     }
 
 public:
@@ -44,19 +44,20 @@ public:
 
 // complete the methods of scope_table class
 
+scope_table::scope_table()
+{
+    this->bucket_count = 107;
+    this->unique_id = 0;
+    this->parent_scope = NULL;
+    table.resize(107);
+}
+
 scope_table::scope_table(scope_table *parent_scope, int bucket_count, int unique_id)
 {
     this->bucket_count = bucket_count;
     this->unique_id = unique_id;
     this->parent_scope = parent_scope;
     table.resize(bucket_count);
-}
-
-scope_table::scope_table()
-{
-    this->bucket_count = 0;
-    this->unique_id = 0;
-    this->parent_scope = NULL;
 }
 
 scope_table::~scope_table()
@@ -66,6 +67,7 @@ scope_table::~scope_table()
         for (auto it = table[i].begin(); it != table[i].end(); ++it)
         {
             delete *it;
+            *it = NULL;
         }
     }
 }
@@ -113,16 +115,16 @@ bool scope_table::insert_in_scope(symbol_info* symbol)
     {
         return false;
     }
-    int index = hash_function(symbol->get_name());
-    for (auto it = table[index].begin(); it != table[index].end(); ++it)
+    
+    symbol_info* found = lookup_in_scope(symbol);
+    
+    if (found == NULL)
     {
-        if ((*it)->get_name() == symbol->get_name())
-        {
-            return false; // Symbol already exists
-        }
+        int index = hash_function(symbol->get_name());
+        table[index].push_back(symbol);
+        return true;
     }
-    table[index].push_back(symbol);
-    return true; // Symbol inserted successfully
+    return false;
 }
 
 bool scope_table::delete_from_scope(symbol_info* symbol)
@@ -151,32 +153,52 @@ bool scope_table::delete_symbol(string name)
 
 void scope_table::print_scope_table(ofstream& outlog)
 {
-    outlog << "ScopeTable # " + to_string(unique_id) << endl;
-
-    // Iterate through the current scope table and print the symbols and all relevant information
+    outlog << "ScopeTable # " << unique_id << endl;
     for (int i = 0; i < bucket_count; i++)
     {
         if (!table[i].empty())
         {
-            outlog << "Index " << i << " : ";
+            outlog << i << "--> " << endl;
             for (auto it = table[i].begin(); it != table[i].end(); ++it)
             {
-                outlog << "< " << (*it)->get_name();  
-                if ((*it)->get_data_type() != "")
-                    outlog << ", " << (*it)->get_data_type();
+                outlog << "< " << (*it)->get_name() << " : " << (*it)->get_type() << " > " << endl;
+                outlog << (*it)->get_symbol_type() << endl;
                 
-                // Print symbol type (Variable, Array, Function)
-                if ((*it)->get_symbol_type() != "")
-                    outlog << ", " << (*it)->get_symbol_type();
-                
-                // If it's an array, print array size
-                if ((*it)->get_symbol_type() == "Array")
-                    outlog << ", size: " << (*it)->get_array_size();
-                
-                outlog << " > ";
+                if ((*it)->get_symbol_type() == "Function Definition")
+                {
+                    outlog << "Return Type : " << (*it)->get_data_type() << endl;
+                    
+                    auto types = (*it)->get_param_types();
+                    auto names = (*it)->get_param_names();
+                    
+                    outlog << "Number of Parameters: " << types.size() << endl;
+                    
+                    outlog << "Parameter Details: ";
+                    for (size_t j = 0; j < types.size(); j++)
+                    {
+                        outlog << types[j] << " " << names[j];
+                        if (j != types.size() - 1)
+                        {
+                            outlog << ", ";
+                        }
+                    }
+                    outlog << endl;
+                }
+                else
+                {
+                    int array_size = (*it)->get_array_size();
+                    if (array_size != 0)
+                    {
+                        outlog << "Type : " << (*it)->get_data_type() << endl;
+                        outlog << "Size : " << array_size << endl;
+                    }
+                    else
+                    {
+                        outlog << "Type : " << (*it)->get_data_type() << endl;
+                    }
+                }
+                outlog << endl;
             }
-            outlog << endl;
         }
     }
-    outlog << "--------------------------------" << endl;
 }

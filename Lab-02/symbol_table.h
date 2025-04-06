@@ -8,6 +8,7 @@ private:
     scope_table *current_scope;
     int bucket_count;
     int current_scope_id;
+    int new_scope_id; // Added new_scope_id
 
 public:
     symbol_table(int bucket_count);
@@ -16,23 +17,22 @@ public:
     void exit_scope();
     bool insert(symbol_info* symbol);
     symbol_info* lookup(symbol_info* symbol);
-    void print_current_scope();
+    void print_current_scope(ofstream& outlog); // Updated parameter
     void print_all_scopes(ofstream& outlog);
+    int getCurrentScopeID() const; // Added new method
 
     // you can add more methods if you need 
     symbol_info* lookup(string name);
-    bool delete_symbol(symbol_info* symbol);
-    bool delete_symbol(string name);
+    bool remove(symbol_info* symbol); // Renamed from delete_symbol
+    bool remove(string name); // Renamed from delete_symbol
 };
 
 // complete the methods of symbol_table class
 
-symbol_table::symbol_table(int bucket_count)
+symbol_table::symbol_table(int bucket_count) : bucket_count(bucket_count), current_scope_id(1), new_scope_id(2)
 {
-    this->bucket_count = bucket_count;
-    current_scope = NULL;
-    current_scope_id = 1; // Start with 1 for the global scope
-    enter_scope(); // Initialize the first scope
+    current_scope = new scope_table(NULL, bucket_count, current_scope_id);
+    // No need to call enter_scope() here
 }
 
 symbol_table::~symbol_table()
@@ -45,7 +45,15 @@ symbol_table::~symbol_table()
 
 void symbol_table::enter_scope()
 {
-    current_scope = new scope_table(current_scope, bucket_count, current_scope_id++);
+    scope_table* new_scope = new scope_table(current_scope, bucket_count, new_scope_id);
+    current_scope_id = new_scope_id;
+    new_scope_id++;
+    current_scope = new_scope;
+}
+
+int symbol_table::getCurrentScopeID() const
+{
+    return current_scope_id;
 }
 
 void symbol_table::exit_scope()
@@ -55,6 +63,10 @@ void symbol_table::exit_scope()
         scope_table *temp = current_scope;
         current_scope = current_scope->get_parent_scope();
         delete temp;
+        temp = NULL;
+        if (current_scope != NULL) {
+            current_scope_id = current_scope->get_unique_id();
+        }
     }
 }
 
@@ -91,7 +103,7 @@ symbol_info* symbol_table::lookup(string name)
     return NULL;
 }
 
-bool symbol_table::delete_symbol(symbol_info* symbol)
+bool symbol_table::remove(symbol_info* symbol)
 {
     if (current_scope != NULL && symbol != NULL)
     {
@@ -100,7 +112,7 @@ bool symbol_table::delete_symbol(symbol_info* symbol)
     return false;
 }
 
-bool symbol_table::delete_symbol(string name)
+bool symbol_table::remove(string name)
 {
     if (current_scope != NULL)
     {
@@ -109,16 +121,15 @@ bool symbol_table::delete_symbol(string name)
     return false;
 }
 
-void symbol_table::print_current_scope()
+void symbol_table::print_current_scope(ofstream& outlog)
 {
     if (current_scope != NULL)
     {
-        ofstream dummy;
-        current_scope->print_scope_table(dummy);
+        current_scope->print_scope_table(outlog);
     }
     else
     {
-        cout << "No current scope." << endl;
+        outlog << "No current scope." << endl;
     }
 }
 
@@ -129,6 +140,7 @@ void symbol_table::print_all_scopes(ofstream& outlog)
     while (temp != NULL)
     {
         temp->print_scope_table(outlog);
+        outlog << endl<<endl;
         temp = temp->get_parent_scope();
     }
     outlog<<"################################"<<endl<<endl;

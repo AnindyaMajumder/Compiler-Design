@@ -1,3 +1,8 @@
+Nonterminals useless in grammar
+
+   scope_entry
+
+
 Terminals unused in grammar
 
    DO
@@ -8,6 +13,11 @@ Terminals unused in grammar
    CASE
    DEFAULT
    CONTINUE
+
+
+Rules useless in grammar
+
+   62 scope_entry: /* empty */
 
 
 Grammar
