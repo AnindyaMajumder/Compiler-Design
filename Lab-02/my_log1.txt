@@ -1,5 +1,3 @@
-New ScopeTable with ID 1 created
-
 At line no: 1 type_specifier : INT 
 
 int
@@ -19,8 +17,6 @@ float
 At line no: 1 parameter_list : parameter_list COMMA type_specifier ID 
 
 int a,float b
-
-New ScopeTable with ID 2 created
 
 At line no: 2 variable : ID 
 
@@ -85,34 +81,14 @@ return a+b;
 At line no: 3 compound_statement : LCURL statements RCURL 
 
 {
-return a+b;
+b
 }
 
 ################################
 
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-8 --> 
-< b : ID >
-Variable
-Type: float
-
-
 ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 2
-Parameter Details: int a, float b
-
+--------------------------------
 ################################
-
-Scopetable with ID 2 removed
 
 At line no: 3 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
@@ -138,8 +114,6 @@ return a+b;
 At line no: 5 type_specifier : VOID 
 
 void
-
-New ScopeTable with ID 3 created
 
 At line no: 6 type_specifier : INT 
 
@@ -439,77 +413,12 @@ float d;
 At line no: 13 compound_statement : LCURL statements RCURL 
 
 {
-int a,b,c,i;
-int e,f[10],g[11];
-a=1;
-b=2;
-c=func(a,b);
-float d;
+d
 }
 
 ################################
 
-ScopeTable # 3
-0 --> 
-< d : ID >
-Variable
-Type: float
-
-1 --> 
-< e : ID >
-Variable
-Type: int
-
-2 --> 
-< f : ID >
-Array
-Type: int
-Size: 10
-
-3 --> 
-< g : ID >
-Array
-Type: int
-Size: 11
-
-5 --> 
-< i : ID >
-Variable
-Type: int
-
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-8 --> 
-< b : ID >
-Variable
-Type: int
-
-9 --> 
-< c : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-1 --> 
-< main : ID >
-Function Definition
-Return Type: void
-Number of Parameters: 0
-Parameter Details: 
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 2
-Parameter Details: int a, float b
-
 ################################
-
-Scopetable with ID 3 removed
 
 At line no: 13 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
@@ -557,21 +466,9 @@ Symbol Table
 
 ################################
 
-ScopeTable # 1
-1 --> 
-< main : ID >
-Function Definition
-Return Type: void
-Number of Parameters: 0
-Parameter Details: 
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 2
-Parameter Details: int a, float b
-
 ################################
+
+
 
 
 Total lines: 13

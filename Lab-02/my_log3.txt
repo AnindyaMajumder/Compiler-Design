@@ -1,10 +1,6 @@
-New ScopeTable with ID 1 created
-
 At line no: 1 type_specifier : INT 
 
 int
-
-New ScopeTable with ID 2 created
 
 At line no: 3 type_specifier : INT 
 
@@ -74,8 +70,6 @@ At line no: 5 expression : logic_expression
 
 a>1
 
-New ScopeTable with ID 3 created
-
 At line no: 6 type_specifier : FLOAT 
 
 float
@@ -143,8 +137,6 @@ a>1
 At line no: 8 expression : logic_expression 
 
 a>1
-
-New ScopeTable with ID 4 created
 
 At line no: 9 type_specifier : INT 
 
@@ -214,8 +206,6 @@ At line no: 11 expression : logic_expression
 
 a>1
 
-New ScopeTable with ID 5 created
-
 At line no: 12 type_specifier : FLOAT 
 
 float
@@ -283,8 +273,6 @@ a>1
 At line no: 14 expression : logic_expression 
 
 a>1
-
-New ScopeTable with ID 6 created
 
 At line no: 15 type_specifier : INT 
 
@@ -354,8 +342,6 @@ At line no: 17 expression : logic_expression
 
 a>1
 
-New ScopeTable with ID 7 created
-
 At line no: 18 type_specifier : FLOAT 
 
 float
@@ -379,64 +365,15 @@ float a;
 At line no: 19 compound_statement : LCURL statements RCURL 
 
 {
-float a;
+a
 }
 
 ################################
 
-ScopeTable # 7
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 6
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 5
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 4
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 3
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
 ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
+Index 7 : < a, int, Variable > 
+--------------------------------
 ################################
-
-Scopetable with ID 7 removed
 
 At line no: 19 statement : compound_statement 
 
@@ -462,61 +399,12 @@ float a;
 At line no: 20 compound_statement : LCURL statements RCURL 
 
 {
-int a;
-if(a>1)
-{
-float a;
-}
+a
 }
 
 ################################
 
-ScopeTable # 6
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 5
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 4
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 3
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
-
-Scopetable with ID 6 removed
 
 At line no: 20 statement : compound_statement 
 
@@ -554,58 +442,12 @@ float a;
 At line no: 21 compound_statement : LCURL statements RCURL 
 
 {
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-}
-}
+a
 }
 
 ################################
 
-ScopeTable # 5
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 4
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 3
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
-
-Scopetable with ID 5 removed
 
 At line no: 21 statement : compound_statement 
 
@@ -655,55 +497,12 @@ float a;
 At line no: 22 compound_statement : LCURL statements RCURL 
 
 {
-int a;
-if(a>1)
-{
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-}
-}
-}
+a
 }
 
 ################################
 
-ScopeTable # 4
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 3
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
-
-Scopetable with ID 4 removed
 
 At line no: 22 statement : compound_statement 
 
@@ -765,52 +564,12 @@ float a;
 At line no: 23 compound_statement : LCURL statements RCURL 
 
 {
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-}
-}
-}
-}
+a
 }
 
 ################################
 
-ScopeTable # 3
-7 --> 
-< a : ID >
-Variable
-Type: float
-
-
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
-
-Scopetable with ID 3 removed
 
 At line no: 23 statement : compound_statement 
 
@@ -884,49 +643,12 @@ float a;
 At line no: 24 compound_statement : LCURL statements RCURL 
 
 {
-int a;
-if(a>1)
-{
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-if(a>1)
-{
-int a;
-if(a>1)
-{
-float a;
-}
-}
-}
-}
-}
+a
 }
 
 ################################
 
-ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
-
-Scopetable with ID 2 removed
 
 At line no: 24 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
@@ -1015,15 +737,9 @@ Symbol Table
 
 ################################
 
-ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-
 ################################
+
+
 
 
 Total lines: 24
