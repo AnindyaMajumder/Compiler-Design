@@ -126,13 +126,6 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 		}
  		;
 
-scope_entry : 
-{
-    st->enter_scope();
-    outlog << "New ScopeTable with ID " << st->getCurrentScopeID() << " created" << endl << endl;
-}
-;
-
 parameter_list : parameter_list COMMA type_specifier ID
 		{
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
@@ -190,7 +183,7 @@ parameter_list : parameter_list COMMA type_specifier ID
 compound_statement : LCURL statements RCURL
 			{ 
  		    	outlog<<"At line no: "<<lines<<" compound_statement : LCURL statements RCURL "<<endl<<endl;
-				outlog<<"{\n"+$2->get_name()+"\n}"<<endl<<endl;
+				outlog<<"{\n"+$3->get_name()+"\n}"<<endl<<endl;
 				
 				$$ = new symbol_info("{\n"+$2->get_name()+"\n}","comp_stmnt");
 				
@@ -199,9 +192,7 @@ compound_statement : LCURL statements RCURL
                 // Note that function parameters should be in the current scope
 
 				st->print_all_scopes(outlog);
-                int id = st->getCurrentScopeID();
-                st->exit_scope();
-                outlog << "Scopetable with ID " << id << " removed" << endl << endl;
+				st->exit_scope();
  		    }
  		    | LCURL RCURL
  		    { 
@@ -214,9 +205,7 @@ compound_statement : LCURL statements RCURL
                 // Print the symbol table here and exit the scope
 				
 				st->print_all_scopes(outlog);
-                int id = st->getCurrentScopeID();
-                st->exit_scope();
-                outlog << "Scopetable with ID " << id << " removed" << endl << endl;
+				st->exit_scope();
  		    }
  		    ;
  		    
@@ -648,7 +637,6 @@ int main(int argc, char *argv[])
 	}
 	// Enter the global or the first scope here
 	st = new symbol_table(10);
-	outlog << "New ScopeTable with ID " << st->getCurrentScopeID() << " created" << endl << endl;
 
 	yyparse();
 	

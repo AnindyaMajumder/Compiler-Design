@@ -87,18 +87,9 @@ b
 ################################
 
 ScopeTable # 1
-<<<<<<< HEAD
-
-
-################################
-
-Scopetable with ID 1 removed
-
-=======
 --------------------------------
 ################################
 
->>>>>>> draft-branch
 At line no: 3 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
 int func(int a,int b)
@@ -210,11 +201,6 @@ b
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 7 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
 int func2(float a,int b)
@@ -808,11 +794,6 @@ c
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 22 statement : compound_statement 
 
 {
@@ -1078,11 +1059,6 @@ b
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 28 statement : compound_statement 
 
 {
@@ -1294,11 +1270,6 @@ c
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 34 statement : compound_statement 
 
 {
@@ -1417,11 +1388,6 @@ c
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 36 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
 int main()

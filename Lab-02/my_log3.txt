@@ -371,24 +371,10 @@ a
 ################################
 
 ScopeTable # 1
-<<<<<<< HEAD
-7--> 
-< a : ID > 
-Variable
-Type : int
-
-
-
-################################
-
-Scopetable with ID 1 removed
-
-=======
 Index 7 : < a, int, Variable > 
 --------------------------------
 ################################
 
->>>>>>> draft-branch
 At line no: 19 statement : compound_statement 
 
 {
@@ -420,11 +406,6 @@ a
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 20 statement : compound_statement 
 
 {
@@ -468,11 +449,6 @@ a
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 21 statement : compound_statement 
 
 {
@@ -528,11 +504,6 @@ a
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 22 statement : compound_statement 
 
 {
@@ -600,11 +571,6 @@ a
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 23 statement : compound_statement 
 
 {
@@ -684,11 +650,6 @@ a
 
 ################################
 
-<<<<<<< HEAD
-Scopetable with ID 1 removed
-
-=======
->>>>>>> draft-branch
 At line no: 24 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
 int func()
