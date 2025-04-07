@@ -1,5 +1,3 @@
-New ScopeTable with ID 1 created
-
 At line no: 1 type_specifier : INT 
 
 int
@@ -83,18 +81,24 @@ return a+b;
 At line no: 3 compound_statement : LCURL statements RCURL 
 
 {
-return a+b;
+b
 }
 
 ################################
 
 ScopeTable # 1
+<<<<<<< HEAD
 
 
 ################################
 
 Scopetable with ID 1 removed
 
+=======
+--------------------------------
+################################
+
+>>>>>>> draft-branch
 At line no: 3 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
 int func(int a,int b)
@@ -199,15 +203,18 @@ return a-b;
 At line no: 7 compound_statement : LCURL statements RCURL 
 
 {
-return a-b;
+b
 }
 
 ################################
 
 ################################
 
+<<<<<<< HEAD
 Scopetable with ID 1 removed
 
+=======
+>>>>>>> draft-branch
 At line no: 7 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
 int func2(float a,int b)
@@ -794,17 +801,18 @@ a=c;
 At line no: 22 compound_statement : LCURL statements RCURL 
 
 {
-int a;
-a=c+i;
-a=c;
+c
 }
 
 ################################
 
 ################################
 
+<<<<<<< HEAD
 Scopetable with ID 1 removed
 
+=======
+>>>>>>> draft-branch
 At line no: 22 statement : compound_statement 
 
 {
@@ -1063,17 +1071,18 @@ d=b;
 At line no: 28 compound_statement : LCURL statements RCURL 
 
 {
-float b;
-b=func2(1.0,2);
-d=b;
+b
 }
 
 ################################
 
 ################################
 
+<<<<<<< HEAD
 Scopetable with ID 1 removed
 
+=======
+>>>>>>> draft-branch
 At line no: 28 statement : compound_statement 
 
 {
@@ -1278,17 +1287,18 @@ i=c;
 At line no: 34 compound_statement : LCURL statements RCURL 
 
 {
-int i;
-c--;
-i=c;
+c
 }
 
 ################################
 
 ################################
 
+<<<<<<< HEAD
 Scopetable with ID 1 removed
 
+=======
+>>>>>>> draft-branch
 At line no: 34 statement : compound_statement 
 
 {
@@ -1400,39 +1410,18 @@ return c;
 At line no: 36 compound_statement : LCURL statements RCURL 
 
 {
-int a,b,c,i;
-int e,f[10],g[11];
-a=1;
-b=2;
-c=func(a,b);
-float d;
-for(i=0;i<10;i++)
-{
-int a;
-a=c+i;
-a=c;
-}
-if(c>10)
-{
-float b;
-b=func2(1.0,2);
-d=b;
-}
-while(c>0)
-{
-int i;
-c--;
-i=c;
-}
-return c;
+c
 }
 
 ################################
 
 ################################
 
+<<<<<<< HEAD
 Scopetable with ID 1 removed
 
+=======
+>>>>>>> draft-branch
 At line no: 36 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
 int main()
