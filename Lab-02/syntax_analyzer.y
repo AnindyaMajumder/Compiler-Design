@@ -144,7 +144,6 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
             // However, note that the scope of the function and the scope of the compound statement are different.
-
 		}
  		;
 

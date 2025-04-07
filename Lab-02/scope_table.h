@@ -143,10 +143,10 @@ bool scope_table::delete_symbol(string name)
         {
             delete *it; // Free the memory of the symbol
             table[index].erase(it); // Remove from the list
-            return true; // Symbol deleted successfully
+            return true; 
         }
     }
-    return false; // Symbol not found
+    return false; // Not found
 }
 
 void scope_table::print_scope_table(ofstream& outlog)
