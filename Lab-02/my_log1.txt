@@ -1,3 +1,4 @@
+Entered new scope with ID: 1937339228
 At line no: 1 type_specifier : INT 
 
 int
@@ -74,6 +75,7 @@ At line no: 2 statement : RETURN expression SEMICOLON
 
 return a+b;
 
+Exiting scope with ID: 1937339228
 At line no: 2 statements : statement 
 
 return a+b;
@@ -81,11 +83,18 @@ return a+b;
 At line no: 3 compound_statement : LCURL statements RCURL 
 
 {
-b
+return a+b;
 }
 
+Entered new scope with ID: 0
+Exiting scope with ID: 0
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 3
+--------------------------------
+ScopeTable # 2
+--------------------------------
 ScopeTable # 1
 --------------------------------
 ################################
@@ -97,6 +106,7 @@ int func(int a,float b)
 return a+b;
 }
 
+Entered new scope with ID: 0
 At line no: 3 unit : func_definition 
 
 int func(int a,float b)
@@ -413,11 +423,35 @@ float d;
 At line no: 13 compound_statement : LCURL statements RCURL 
 
 {
-d
+int a,b,c,i;
+int e,f[10],g[11];
+a=1;
+b=2;
+c=func(a,b);
+float d;
 }
 
+Entered new scope with ID: 1952542572
+Exiting scope with ID: 1952542572
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 5
+--------------------------------
+ScopeTable # 4
+Index 0 : < d, float, Variable > 
+Index 1 : < e, int, Variable > 
+Index 2 : < f, int, Array, size: 10 > 
+Index 3 : < g, int, Array, size: 11 > 
+Index 5 : < i, int, Variable > 
+Index 7 : < a, int, Variable > 
+Index 8 : < b, int, Variable > 
+Index 9 : < c, int, Variable > 
+--------------------------------
+ScopeTable # 2
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 13 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
@@ -432,6 +466,7 @@ c=func(a,b);
 float d;
 }
 
+Entered new scope with ID: 1563504987
 At line no: 13 unit : func_definition 
 
 void main()
@@ -466,6 +501,22 @@ Symbol Table
 
 ################################
 
+ScopeTable # 6
+--------------------------------
+ScopeTable # 4
+Index 0 : < d, float, Variable > 
+Index 1 : < e, int, Variable > 
+Index 2 : < f, int, Array, size: 10 > 
+Index 3 : < g, int, Array, size: 11 > 
+Index 5 : < i, int, Variable > 
+Index 7 : < a, int, Variable > 
+Index 8 : < b, int, Variable > 
+Index 9 : < c, int, Variable > 
+--------------------------------
+ScopeTable # 2
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 

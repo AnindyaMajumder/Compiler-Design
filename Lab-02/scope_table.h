@@ -14,6 +14,7 @@ private:
     int unique_id;
     scope_table *parent_scope = NULL;
     vector<list<symbol_info *>> table;
+    int scope_id;
 
     int hash_function(string name)
     {
@@ -36,10 +37,11 @@ public:
     void print_scope_table(ofstream& outlog);
     ~scope_table();
 
-    // Renamed delete to delete_symbol to avoid keyword conflict
+    // you can add more methods if you need
     symbol_info *lookup(string name);
     bool delete_symbol(string name);
     int get_bucket_count();
+    int get_scope_id();
 };
 
 // complete the methods of scope_table class
@@ -179,4 +181,9 @@ void scope_table::print_scope_table(ofstream& outlog)
         }
     }
     outlog << "--------------------------------" << endl;
+}
+
+int scope_table::get_scope_id()
+{
+    return scope_id;
 }

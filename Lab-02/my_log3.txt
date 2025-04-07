@@ -1,3 +1,4 @@
+Entered new scope with ID: 1937339228
 At line no: 1 type_specifier : INT 
 
 int
@@ -365,13 +366,20 @@ float a;
 At line no: 19 compound_statement : LCURL statements RCURL 
 
 {
-a
+float a;
 }
 
+Entered new scope with ID: 0
+Exiting scope with ID: 0
+Current state of the symbol table after exiting scope:
 ################################
 
-ScopeTable # 1
+ScopeTable # 3
+--------------------------------
+ScopeTable # 2
 Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
 --------------------------------
 ################################
 
@@ -399,11 +407,25 @@ float a;
 At line no: 20 compound_statement : LCURL statements RCURL 
 
 {
-a
+int a;
+if(a>1)
+{
+float a;
+}
 }
 
+Entered new scope with ID: 0
+Exiting scope with ID: 0
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 4
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 20 statement : compound_statement 
@@ -442,11 +464,29 @@ float a;
 At line no: 21 compound_statement : LCURL statements RCURL 
 
 {
-a
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+}
+}
 }
 
+Entered new scope with ID: 544498031
+Exiting scope with ID: 544498031
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 5
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 21 statement : compound_statement 
@@ -497,11 +537,33 @@ float a;
 At line no: 22 compound_statement : LCURL statements RCURL 
 
 {
-a
+int a;
+if(a>1)
+{
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+}
+}
+}
 }
 
+Entered new scope with ID: 544498031
+Exiting scope with ID: 544498031
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 6
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 22 statement : compound_statement 
@@ -564,11 +626,37 @@ float a;
 At line no: 23 compound_statement : LCURL statements RCURL 
 
 {
-a
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+}
+}
+}
+}
 }
 
+Entered new scope with ID: 544498031
+Exiting scope with ID: 544498031
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 7
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 23 statement : compound_statement 
@@ -643,11 +731,41 @@ float a;
 At line no: 24 compound_statement : LCURL statements RCURL 
 
 {
-a
+int a;
+if(a>1)
+{
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+if(a>1)
+{
+int a;
+if(a>1)
+{
+float a;
+}
+}
+}
+}
+}
 }
 
+Entered new scope with ID: 544498031
+Exiting scope with ID: 544498031
+Current state of the symbol table after exiting scope:
 ################################
 
+ScopeTable # 8
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 At line no: 24 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
@@ -677,6 +795,7 @@ float a;
 }
 }
 
+Entered new scope with ID: 544498031
 At line no: 24 unit : func_definition 
 
 int func()
@@ -737,6 +856,13 @@ Symbol Table
 
 ################################
 
+ScopeTable # 9
+--------------------------------
+ScopeTable # 2
+Index 7 : < a, int, Variable > 
+--------------------------------
+ScopeTable # 1
+--------------------------------
 ################################
 
 

@@ -132,6 +132,8 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
             // However, note that the scope of the function and the scope of the compound statement are different.	
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
 		| type_specifier ID LPAREN RPAREN compound_statement
 		{
@@ -144,6 +146,8 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
             // However, note that the scope of the function and the scope of the compound statement are different.
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
  		;
 
@@ -202,33 +206,46 @@ parameter_list : parameter_list COMMA type_specifier ID
  		;
 
 compound_statement : LCURL statements RCURL
-			{ 
- 		    	outlog<<"At line no: "<<lines<<" compound_statement : LCURL statements RCURL "<<endl<<endl;
-				outlog<<"{\n"+$3->get_name()+"\n}"<<endl<<endl;
-				
-				$$ = new symbol_info("{\n"+$2->get_name()+"\n}","comp_stmnt");
-				
-                // The compound statement is complete.
-                // Print the symbol table here and exit the scope
-                // Note that function parameters should be in the current scope
+		{
+			outlog << "At line no: " << lines << " compound_statement : LCURL statements RCURL " << endl << endl;
+			outlog << "{\n" << $2->get_name() << "\n}" << endl << endl;
 
-				st->print_all_scopes(outlog);
-				st->exit_scope();
- 		    }
- 		    | LCURL RCURL
- 		    { 
- 		    	outlog<<"At line no: "<<lines<<" compound_statement : LCURL RCURL "<<endl<<endl;
-				outlog<<"{\n}"<<endl<<endl;
-				
-				$$ = new symbol_info("{\n}","comp_stmnt");
-				
-				// The compound statement is complete.
-                // Print the symbol table here and exit the scope
-				
-				st->print_all_scopes(outlog);
-				st->exit_scope();
- 		    }
- 		    ;
+			$$ = new symbol_info("{\n" + $2->get_name() + "\n}", "comp_stmnt");
+
+			// Enter a new scope and print its ID
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Print the ID of the scope being removed
+			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Print the current state of the symbol table
+			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			st->print_all_scopes(outlog);
+
+			st->exit_scope();
+		}
+		| LCURL RCURL
+		{
+			outlog << "At line no: " << lines << " compound_statement : LCURL RCURL " << endl << endl;
+			outlog << "{\n}" << endl << endl;
+
+			$$ = new symbol_info("{\n}", "comp_stmnt");
+
+			// Enter a new scope and print its ID
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Print the ID of the scope being removed
+			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Print the current state of the symbol table
+			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			st->print_all_scopes(outlog);
+
+			st->exit_scope();
+		}
+		;
  		    
 var_declaration : type_specifier declaration_list SEMICOLON
 {
@@ -398,6 +415,7 @@ statement : var_declaration
 			outlog<<"return "<<$2->get_name()<<";"<<endl<<endl;
 			
 			$$ = new symbol_info("return "+$2->get_name()+";","stmnt");
+			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
 	  }
 	  ;
 	  
@@ -643,6 +661,8 @@ int main(int argc, char *argv[])
 	}
 	// Enter the global or the first scope here
 	st = new symbol_table(10);
+	st->enter_scope();
+	outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 
 	yyparse();
 	

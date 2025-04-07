@@ -23,6 +23,7 @@ public:
     symbol_info* lookup(string name);
     bool delete_symbol(symbol_info* symbol);
     bool delete_symbol(string name);
+    int get_current_scope_id();
 };
 
 // complete the methods of symbol_table class
@@ -132,4 +133,13 @@ void symbol_table::print_all_scopes(ofstream& outlog)
         temp = temp->get_parent_scope();
     }
     outlog<<"################################"<<endl<<endl;
+}
+
+int symbol_table::get_current_scope_id()
+{
+    if (current_scope != NULL)
+    {
+        return current_scope->get_scope_id();
+    }
+    return -1; // Return -1 if there is no current scope
 }
