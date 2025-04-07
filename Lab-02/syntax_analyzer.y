@@ -20,6 +20,14 @@ int lines = 1;
 ofstream outlog;
 
 // you may declare other necessary variables here to store necessary info
+// such as current variable type, variable list, function name, return type, function parameter types, parameters names etc.
+string current_type;
+string data_type;
+int array_size;
+vector<string> param_names;
+vector<string> param_types;
+
+// helper functions
 vector<string> split(const string& str, char delim) {
     vector<string> tokens;
     stringstream ss(str);
@@ -32,12 +40,26 @@ vector<string> split(const string& str, char delim) {
     return tokens;
 }
 
-// such as current variable type, variable list, function name, return type, function parameter types, parameters names etc.
-string current_type;
-string data_type;
-int array_size;
-vector<string> param_names;
-vector<string> param_types;
+void process_variable(const string& var, const string& type) {
+    size_t open_bracket = var.find('[');
+    size_t close_bracket = var.find(']');
+
+    if (open_bracket != string::npos && close_bracket != string::npos && close_bracket > open_bracket + 1) {
+        // Array variable
+        string array_name = var.substr(0, open_bracket);
+        int array_size = stoi(var.substr(open_bracket + 1, close_bracket - open_bracket - 1));
+
+        symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
+        new_symbol->set_array_size(array_size);
+        new_symbol->set_data_type(type);
+        st->insert(new_symbol);
+    } else {
+        // Normal variable
+        symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
+        new_symbol->set_data_type(type);
+        st->insert(new_symbol);
+    }
+}
 
 void yyerror(char *s)
 {
@@ -210,41 +232,26 @@ compound_statement : LCURL statements RCURL
  		    ;
  		    
 var_declaration : type_specifier declaration_list SEMICOLON
-		 {
-			outlog<<"At line no: "<<lines<<" var_declaration : type_specifier declaration_list SEMICOLON "<<endl<<endl;
-			outlog<<$1->get_name()<<" "<<$2->get_name()<<";"<<endl<<endl;
-			
-			$$ = new symbol_info($1->get_name()+" "+$2->get_name()+";","var_dec");
-			
-			// Insert necessary information about the variables in the symbol table
-			data_type = $1->get_name();
-			// Clear the variable list for the next variable declaration
-			vector<string> vars = split($2->get_name(), ',');
-			
-			for (const string& var : vars) {
-				size_t open_bracket = var.find('[');
-				size_t close_bracket = var.find(']');
+{
+    outlog << "At line no: " << lines << " var_declaration : type_specifier declaration_list SEMICOLON " << endl << endl;
+    outlog << $1->get_name() << " " << $2->get_name() << ";" << endl << endl;
 
-				if (open_bracket != string::npos && close_bracket != string::npos && close_bracket > open_bracket + 1) {
-					
-					string array_name = var.substr(0, open_bracket);
-					string size_str = var.substr(open_bracket + 1, close_bracket - open_bracket - 1);
-					int array_size = stoi(size_str);  
+    $$ = new symbol_info($1->get_name() + " " + $2->get_name() + ";", "var_dec");
 
-					
-					symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
-					new_symbol->set_array_size(array_size);
-					new_symbol->set_data_type(data_type);
-					st->insert(new_symbol);
-				} else {
-					// Normal variable
-					symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
-					new_symbol->set_data_type(data_type);
-					st->insert(new_symbol);
-				}
-			}
-		 }
- 		 ;
+	// Insert necessary information about the variables in the symbol table
+    data_type = $1->get_name();
+    string decl_list = $2->get_name();
+    size_t start = 0, end;
+
+    while ((end = decl_list.find(',', start)) != string::npos) {
+        string var = decl_list.substr(start, end - start);
+        process_variable(var, data_type);
+        start = end + 1;
+    }
+    // Process the last variable (or the only one if no commas)
+    process_variable(decl_list.substr(start), data_type);
+}
+;
 
 type_specifier : INT
 		{

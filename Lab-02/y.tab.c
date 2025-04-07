@@ -86,6 +86,14 @@ int lines = 1;
 ofstream outlog;
 
 // you may declare other necessary variables here to store necessary info
+// such as current variable type, variable list, function name, return type, function parameter types, parameters names etc.
+string current_type;
+string data_type;
+int array_size;
+vector<string> param_names;
+vector<string> param_types;
+
+// helper functions
 vector<string> split(const string& str, char delim) {
     vector<string> tokens;
     stringstream ss(str);
@@ -98,12 +106,26 @@ vector<string> split(const string& str, char delim) {
     return tokens;
 }
 
-// such as current variable type, variable list, function name, return type, function parameter types, parameters names etc.
-string current_type;
-string data_type;
-int array_size;
-vector<string> param_names;
-vector<string> param_types;
+void process_variable(const string& var, const string& type) {
+    size_t open_bracket = var.find('[');
+    size_t close_bracket = var.find(']');
+
+    if (open_bracket != string::npos && close_bracket != string::npos && close_bracket > open_bracket + 1) {
+        // Array variable
+        string array_name = var.substr(0, open_bracket);
+        int array_size = stoi(var.substr(open_bracket + 1, close_bracket - open_bracket - 1));
+
+        symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
+        new_symbol->set_array_size(array_size);
+        new_symbol->set_data_type(type);
+        st->insert(new_symbol);
+    } else {
+        // Normal variable
+        symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
+        new_symbol->set_data_type(type);
+        st->insert(new_symbol);
+    }
+}
 
 void yyerror(char *s)
 {
@@ -116,7 +138,7 @@ void yyerror(char *s)
 
 
 /* Line 371 of yacc.c  */
-#line 120 "y.tab.c"
+#line 142 "y.tab.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -260,7 +282,7 @@ int yyparse ();
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 264 "y.tab.c"
+#line 286 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -576,13 +598,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    60,    60,    71,    78,    87,    94,   103,   114,   129,
-     143,   157,   169,   183,   197,   212,   249,   256,   263,   272,
-     280,   290,   298,   309,   316,   325,   332,   340,   347,   354,
-     361,   368,   375,   382,   389,   398,   405,   414,   422,   431,
-     438,   447,   454,   463,   470,   479,   487,   496,   504,   514,
-     521,   528,   537,   544,   551,   558,   565,   572,   579,   588,
-     596,   604,   611
+       0,    82,    82,    93,   100,   109,   116,   125,   136,   151,
+     165,   179,   191,   205,   219,   234,   256,   263,   270,   279,
+     287,   297,   305,   316,   323,   332,   339,   347,   354,   361,
+     368,   375,   382,   389,   396,   405,   412,   421,   429,   438,
+     445,   454,   461,   470,   477,   486,   494,   503,   511,   521,
+     528,   535,   544,   551,   558,   565,   572,   579,   586,   595,
+     603,   611,   618
 };
 #endif
 
@@ -1566,7 +1588,7 @@ yyreduce:
     {
         case 2:
 /* Line 1792 of yacc.c  */
-#line 61 "syntax_analyzer.y"
+#line 83 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" start : program "<<endl<<endl;
 		outlog<<"Symbol Table"<<endl<<endl;
@@ -1579,7 +1601,7 @@ yyreduce:
 
   case 3:
 /* Line 1792 of yacc.c  */
-#line 72 "syntax_analyzer.y"
+#line 94 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" program : program unit "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()+"\n"+(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1590,7 +1612,7 @@ yyreduce:
 
   case 4:
 /* Line 1792 of yacc.c  */
-#line 79 "syntax_analyzer.y"
+#line 101 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" program : unit "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1601,7 +1623,7 @@ yyreduce:
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 88 "syntax_analyzer.y"
+#line 110 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" unit : var_declaration "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1612,7 +1634,7 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 95 "syntax_analyzer.y"
+#line 117 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" unit : func_definition "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1623,7 +1645,7 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 104 "syntax_analyzer.y"
+#line 126 "syntax_analyzer.y"
     {	
 			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (6)])->get_name()<<" "<<(yyvsp[(2) - (6)])->get_name()<<"("+(yyvsp[(4) - (6)])->get_name()+")\n"<<(yyvsp[(6) - (6)])->get_name()<<endl<<endl;
@@ -1638,7 +1660,7 @@ yyreduce:
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 115 "syntax_analyzer.y"
+#line 137 "syntax_analyzer.y"
     {
 			
 			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
@@ -1655,7 +1677,7 @@ yyreduce:
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 130 "syntax_analyzer.y"
+#line 152 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (4)])->get_name()<<","<<(yyvsp[(3) - (4)])->get_name()<<" "<<(yyvsp[(4) - (4)])->get_name()<<endl<<endl;
@@ -1673,7 +1695,7 @@ yyreduce:
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 144 "syntax_analyzer.y"
+#line 166 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1691,7 +1713,7 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 158 "syntax_analyzer.y"
+#line 180 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<" "<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1707,7 +1729,7 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 170 "syntax_analyzer.y"
+#line 192 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1723,7 +1745,7 @@ yyreduce:
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 184 "syntax_analyzer.y"
+#line 206 "syntax_analyzer.y"
     { 
  		    	outlog<<"At line no: "<<lines<<" compound_statement : LCURL statements RCURL "<<endl<<endl;
 				outlog<<"{\n"+(yyvsp[(3) - (3)])->get_name()+"\n}"<<endl<<endl;
@@ -1741,7 +1763,7 @@ yyreduce:
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 198 "syntax_analyzer.y"
+#line 220 "syntax_analyzer.y"
     { 
  		    	outlog<<"At line no: "<<lines<<" compound_statement : LCURL RCURL "<<endl<<endl;
 				outlog<<"{\n}"<<endl<<endl;
@@ -1758,46 +1780,31 @@ yyreduce:
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 213 "syntax_analyzer.y"
+#line 235 "syntax_analyzer.y"
     {
-			outlog<<"At line no: "<<lines<<" var_declaration : type_specifier declaration_list SEMICOLON "<<endl<<endl;
-			outlog<<(yyvsp[(1) - (3)])->get_name()<<" "<<(yyvsp[(2) - (3)])->get_name()<<";"<<endl<<endl;
-			
-			(yyval) = new symbol_info((yyvsp[(1) - (3)])->get_name()+" "+(yyvsp[(2) - (3)])->get_name()+";","var_dec");
-			
-			// Insert necessary information about the variables in the symbol table
-			data_type = (yyvsp[(1) - (3)])->get_name();
-			// Clear the variable list for the next variable declaration
-			vector<string> vars = split((yyvsp[(2) - (3)])->get_name(), ',');
-			
-			for (const string& var : vars) {
-				size_t open_bracket = var.find('[');
-				size_t close_bracket = var.find(']');
+    outlog << "At line no: " << lines << " var_declaration : type_specifier declaration_list SEMICOLON " << endl << endl;
+    outlog << (yyvsp[(1) - (3)])->get_name() << " " << (yyvsp[(2) - (3)])->get_name() << ";" << endl << endl;
 
-				if (open_bracket != string::npos && close_bracket != string::npos && close_bracket > open_bracket + 1) {
-					
-					string array_name = var.substr(0, open_bracket);
-					string size_str = var.substr(open_bracket + 1, close_bracket - open_bracket - 1);
-					int array_size = stoi(size_str);  
+    (yyval) = new symbol_info((yyvsp[(1) - (3)])->get_name() + " " + (yyvsp[(2) - (3)])->get_name() + ";", "var_dec");
 
-					
-					symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
-					new_symbol->set_array_size(array_size);
-					new_symbol->set_data_type(data_type);
-					st->insert(new_symbol);
-				} else {
-					// Normal variable
-					symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
-					new_symbol->set_data_type(data_type);
-					st->insert(new_symbol);
-				}
-			}
-		 }
+	// Insert necessary information about the variables in the symbol table
+    data_type = (yyvsp[(1) - (3)])->get_name();
+    string decl_list = (yyvsp[(2) - (3)])->get_name();
+    size_t start = 0, end;
+
+    while ((end = decl_list.find(',', start)) != string::npos) {
+        string var = decl_list.substr(start, end - start);
+        process_variable(var, data_type);
+        start = end + 1;
+    }
+    // Process the last variable (or the only one if no commas)
+    process_variable(decl_list.substr(start), data_type);
+}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 250 "syntax_analyzer.y"
+#line 257 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : INT "<<endl<<endl;
 			outlog<<"int"<<endl<<endl;
@@ -1808,7 +1815,7 @@ yyreduce:
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 257 "syntax_analyzer.y"
+#line 264 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : FLOAT "<<endl<<endl;
 			outlog<<"float"<<endl<<endl;
@@ -1819,7 +1826,7 @@ yyreduce:
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 264 "syntax_analyzer.y"
+#line 271 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : VOID "<<endl<<endl;
 			outlog<<"void"<<endl<<endl;
@@ -1830,7 +1837,7 @@ yyreduce:
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 273 "syntax_analyzer.y"
+#line 280 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (3)])->get_name()+","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1842,7 +1849,7 @@ yyreduce:
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 281 "syntax_analyzer.y"
+#line 288 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (6)])->get_name()+","<<(yyvsp[(3) - (6)])->get_name()<<"["<<(yyvsp[(5) - (6)])->get_name()<<"]"<<endl<<endl;
@@ -1856,7 +1863,7 @@ yyreduce:
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 291 "syntax_analyzer.y"
+#line 298 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1868,7 +1875,7 @@ yyreduce:
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 299 "syntax_analyzer.y"
+#line 306 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
@@ -1880,7 +1887,7 @@ yyreduce:
 
   case 23:
 /* Line 1792 of yacc.c  */
-#line 310 "syntax_analyzer.y"
+#line 317 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1891,7 +1898,7 @@ yyreduce:
 
   case 24:
 /* Line 1792 of yacc.c  */
-#line 317 "syntax_analyzer.y"
+#line 324 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statements statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<"\n"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1902,7 +1909,7 @@ yyreduce:
 
   case 25:
 /* Line 1792 of yacc.c  */
-#line 326 "syntax_analyzer.y"
+#line 333 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : var_declaration "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1913,7 +1920,7 @@ yyreduce:
 
   case 26:
 /* Line 1792 of yacc.c  */
-#line 333 "syntax_analyzer.y"
+#line 340 "syntax_analyzer.y"
     {
 	  		outlog<<"At line no: "<<lines<<" statement : func_definition "<<endl<<endl;
             outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1925,7 +1932,7 @@ yyreduce:
 
   case 27:
 /* Line 1792 of yacc.c  */
-#line 341 "syntax_analyzer.y"
+#line 348 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : expression_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1936,7 +1943,7 @@ yyreduce:
 
   case 28:
 /* Line 1792 of yacc.c  */
-#line 348 "syntax_analyzer.y"
+#line 355 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : compound_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1947,7 +1954,7 @@ yyreduce:
 
   case 29:
 /* Line 1792 of yacc.c  */
-#line 355 "syntax_analyzer.y"
+#line 362 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement "<<endl<<endl;
 			outlog<<"for("<<(yyvsp[(3) - (7)])->get_name()<<(yyvsp[(4) - (7)])->get_name()<<(yyvsp[(5) - (7)])->get_name()<<")\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -1958,7 +1965,7 @@ yyreduce:
 
   case 30:
 /* Line 1792 of yacc.c  */
-#line 362 "syntax_analyzer.y"
+#line 369 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -1969,7 +1976,7 @@ yyreduce:
 
   case 31:
 /* Line 1792 of yacc.c  */
-#line 369 "syntax_analyzer.y"
+#line 376 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement ELSE statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (7)])->get_name()<<")\n"<<(yyvsp[(5) - (7)])->get_name()<<"\nelse\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -1980,7 +1987,7 @@ yyreduce:
 
   case 32:
 /* Line 1792 of yacc.c  */
-#line 376 "syntax_analyzer.y"
+#line 383 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : WHILE LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"while("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -1991,7 +1998,7 @@ yyreduce:
 
   case 33:
 /* Line 1792 of yacc.c  */
-#line 383 "syntax_analyzer.y"
+#line 390 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : PRINTLN LPAREN ID RPAREN SEMICOLON "<<endl<<endl;
 			outlog<<"printf("<<(yyvsp[(3) - (5)])->get_name()<<");"<<endl<<endl; 
@@ -2002,7 +2009,7 @@ yyreduce:
 
   case 34:
 /* Line 1792 of yacc.c  */
-#line 390 "syntax_analyzer.y"
+#line 397 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : RETURN expression SEMICOLON "<<endl<<endl;
 			outlog<<"return "<<(yyvsp[(2) - (3)])->get_name()<<";"<<endl<<endl;
@@ -2013,7 +2020,7 @@ yyreduce:
 
   case 35:
 /* Line 1792 of yacc.c  */
-#line 399 "syntax_analyzer.y"
+#line 406 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : SEMICOLON "<<endl<<endl;
 				outlog<<";"<<endl<<endl;
@@ -2024,7 +2031,7 @@ yyreduce:
 
   case 36:
 /* Line 1792 of yacc.c  */
-#line 406 "syntax_analyzer.y"
+#line 413 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : expression SEMICOLON "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (2)])->get_name()<<";"<<endl<<endl;
@@ -2035,7 +2042,7 @@ yyreduce:
 
   case 37:
 /* Line 1792 of yacc.c  */
-#line 415 "syntax_analyzer.y"
+#line 422 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" variable : ID "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2047,7 +2054,7 @@ yyreduce:
 
   case 38:
 /* Line 1792 of yacc.c  */
-#line 423 "syntax_analyzer.y"
+#line 430 "syntax_analyzer.y"
     {
 	 	outlog<<"At line no: "<<lines<<" variable : ID LTHIRD expression RTHIRD "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
@@ -2058,7 +2065,7 @@ yyreduce:
 
   case 39:
 /* Line 1792 of yacc.c  */
-#line 432 "syntax_analyzer.y"
+#line 439 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2069,7 +2076,7 @@ yyreduce:
 
   case 40:
 /* Line 1792 of yacc.c  */
-#line 439 "syntax_analyzer.y"
+#line 446 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : variable ASSIGNOP logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<"="<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2080,7 +2087,7 @@ yyreduce:
 
   case 41:
 /* Line 1792 of yacc.c  */
-#line 448 "syntax_analyzer.y"
+#line 455 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2091,7 +2098,7 @@ yyreduce:
 
   case 42:
 /* Line 1792 of yacc.c  */
-#line 455 "syntax_analyzer.y"
+#line 462 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression LOGICOP rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2102,7 +2109,7 @@ yyreduce:
 
   case 43:
 /* Line 1792 of yacc.c  */
-#line 464 "syntax_analyzer.y"
+#line 471 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2113,7 +2120,7 @@ yyreduce:
 
   case 44:
 /* Line 1792 of yacc.c  */
-#line 471 "syntax_analyzer.y"
+#line 478 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression RELOP simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2124,7 +2131,7 @@ yyreduce:
 
   case 45:
 /* Line 1792 of yacc.c  */
-#line 480 "syntax_analyzer.y"
+#line 487 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2136,7 +2143,7 @@ yyreduce:
 
   case 46:
 /* Line 1792 of yacc.c  */
-#line 488 "syntax_analyzer.y"
+#line 495 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : simple_expression ADDOP term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2147,7 +2154,7 @@ yyreduce:
 
   case 47:
 /* Line 1792 of yacc.c  */
-#line 497 "syntax_analyzer.y"
+#line 504 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2159,7 +2166,7 @@ yyreduce:
 
   case 48:
 /* Line 1792 of yacc.c  */
-#line 505 "syntax_analyzer.y"
+#line 512 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : term MULOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2171,7 +2178,7 @@ yyreduce:
 
   case 49:
 /* Line 1792 of yacc.c  */
-#line 515 "syntax_analyzer.y"
+#line 522 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : ADDOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2182,7 +2189,7 @@ yyreduce:
 
   case 50:
 /* Line 1792 of yacc.c  */
-#line 522 "syntax_analyzer.y"
+#line 529 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : NOT unary_expression "<<endl<<endl;
 			outlog<<"!"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2193,7 +2200,7 @@ yyreduce:
 
   case 51:
 /* Line 1792 of yacc.c  */
-#line 529 "syntax_analyzer.y"
+#line 536 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : factor "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2204,7 +2211,7 @@ yyreduce:
 
   case 52:
 /* Line 1792 of yacc.c  */
-#line 538 "syntax_analyzer.y"
+#line 545 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2215,7 +2222,7 @@ yyreduce:
 
   case 53:
 /* Line 1792 of yacc.c  */
-#line 545 "syntax_analyzer.y"
+#line 552 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : ID LPAREN argument_list RPAREN "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"("<<(yyvsp[(3) - (4)])->get_name()<<")"<<endl<<endl;
@@ -2226,7 +2233,7 @@ yyreduce:
 
   case 54:
 /* Line 1792 of yacc.c  */
-#line 552 "syntax_analyzer.y"
+#line 559 "syntax_analyzer.y"
     {
 	   	outlog<<"At line no: "<<lines<<" factor : LPAREN expression RPAREN "<<endl<<endl;
 		outlog<<"("<<(yyvsp[(2) - (3)])->get_name()<<")"<<endl<<endl;
@@ -2237,7 +2244,7 @@ yyreduce:
 
   case 55:
 /* Line 1792 of yacc.c  */
-#line 559 "syntax_analyzer.y"
+#line 566 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_INT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2248,7 +2255,7 @@ yyreduce:
 
   case 56:
 /* Line 1792 of yacc.c  */
-#line 566 "syntax_analyzer.y"
+#line 573 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_FLOAT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2259,7 +2266,7 @@ yyreduce:
 
   case 57:
 /* Line 1792 of yacc.c  */
-#line 573 "syntax_analyzer.y"
+#line 580 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable INCOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"++"<<endl<<endl;
@@ -2270,7 +2277,7 @@ yyreduce:
 
   case 58:
 /* Line 1792 of yacc.c  */
-#line 580 "syntax_analyzer.y"
+#line 587 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable DECOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"--"<<endl<<endl;
@@ -2281,7 +2288,7 @@ yyreduce:
 
   case 59:
 /* Line 1792 of yacc.c  */
-#line 589 "syntax_analyzer.y"
+#line 596 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list : arguments "<<endl<<endl;
 					outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2292,7 +2299,7 @@ yyreduce:
 
   case 60:
 /* Line 1792 of yacc.c  */
-#line 596 "syntax_analyzer.y"
+#line 603 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list :  "<<endl<<endl;
 					outlog<<""<<endl<<endl;
@@ -2303,7 +2310,7 @@ yyreduce:
 
   case 61:
 /* Line 1792 of yacc.c  */
-#line 605 "syntax_analyzer.y"
+#line 612 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : arguments COMMA logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2314,7 +2321,7 @@ yyreduce:
 
   case 62:
 /* Line 1792 of yacc.c  */
-#line 612 "syntax_analyzer.y"
+#line 619 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2325,7 +2332,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 2329 "y.tab.c"
+#line 2336 "y.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2557,7 +2564,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 621 "syntax_analyzer.y"
+#line 628 "syntax_analyzer.y"
 
 
 int main(int argc, char *argv[])
