@@ -36,7 +36,7 @@ vector<string> split(const string& str, char delim) {
     while (getline(ss, token, delim)) {
         tokens.push_back(token);
     }
-
+	// This function is useful for breaking down strings like comma-separated variable declarations into individual variables.
     return tokens;
 }
 
