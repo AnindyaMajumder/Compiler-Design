@@ -1,3 +1,4 @@
+==== Pass 1: Parsing input and building AST ====
 New ScopeTable with ID 1 created
 
 At line no: 1 type_specifier : INT 
@@ -1026,4 +1027,23 @@ Parameter Details:
 ################################
 
 
+Symbol Table after first pass:
+################################
+
+ScopeTable # 1
+8 --> 
+< func : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 0
+Parameter Details: 
+
+################################
+
+
+==== Pass 2: Generating Three-Address Code from AST ====
+Generating Three-Address Code...
+Three-Address Code Generation Complete
+
 Total lines: 24
+Total errors: 0

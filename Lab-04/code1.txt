@@ -27,8 +27,8 @@ a = t3
 t4 = 2
 b = t4
 t5 = a
-param t5
 t6 = b
+param t5
 param t6
 t7 = call func, 2
 c = t7

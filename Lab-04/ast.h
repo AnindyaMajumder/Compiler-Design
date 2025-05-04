@@ -42,12 +42,16 @@ public:
     
     string generate_index_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                               int& temp_count, int& label_count) const {
+        // TODO: Implement this method
+        // Should generate code to calculate the array index and return the temp variable
         if (!index) return "";
         return index->generate_code(outcode, symbol_to_temp, temp_count, label_count);
     }
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for variable access or array access
         if (!has_index()) {
             // Output variable value to match code1.txt format - add a temp variable assignment
             string result_temp = "t" + to_string(temp_count++);
@@ -75,6 +79,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for constant values
         string result_temp = "t" + to_string(temp_count++);
         outcode << result_temp << " = " << value << "\n";
         return result_temp;
@@ -100,6 +106,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for binary operations
         // Generate code for the operands exactly as in code1.txt
         string left_temp = left->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         string right_temp = right->generate_code(outcode, symbol_to_temp, temp_count, label_count);
@@ -127,6 +135,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for unary operations
         string expr_temp = expr->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         string result_temp = "t" + to_string(temp_count++);
         outcode << result_temp << " = " << op << expr_temp << "\n";
@@ -153,6 +163,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for assignment operations
         // Generate code for the right hand side
         string rhs_temp = rhs->generate_code(outcode, symbol_to_temp, temp_count, label_count);
 
@@ -191,9 +203,10 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for expression statements
         if (expr) {
             // Generate code for the expression but don't add extra output
-            // This matches code1.txt where expressions like a;b; don't generate extra lines
             return expr->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         }
         return "";
@@ -219,6 +232,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for all statements in the block
         // Generate code for all statements in the block to match code1.txt format
         for (auto stmt : statements) {
             stmt->generate_code(outcode, symbol_to_temp, temp_count, label_count);
@@ -247,7 +262,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
-        // Generate code for if-else statements according to code1.txt format
+        // TODO: Implement this method
+        // Should generate code for if-else statements
         string label_then = "L" + to_string(label_count++);
         string label_else = "L" + to_string(label_count++);
         string label_end = "L" + to_string(label_count++);
@@ -299,6 +315,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for while loops
         string label_start = "L" + to_string(label_count++);
         string label_body = "L" + to_string(label_count++);
         string label_end = "L" + to_string(label_count++);
@@ -349,6 +367,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for for loops
         string label_start = "L" + to_string(label_count++);
         string label_body = "L" + to_string(label_count++);
         string label_end = "L" + to_string(label_count++);
@@ -399,6 +419,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for return statements
         // Generate code for the expression exactly as in code1.txt
         string expr_temp = expr ? expr->generate_code(outcode, symbol_to_temp, temp_count, label_count) : "";
         
@@ -424,6 +446,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for variable declarations
         for (const auto& var : vars) {
             if (var.second == 0) {
                 // Regular variable declaration - format matches code3.txt
@@ -463,6 +487,8 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
+        // TODO: Implement this method
+        // Should generate code for function declarations
         // Format exactly like code3.txt
         outcode << "// Function: " << return_type << " " << name << "(";
         for (size_t i = 0; i < params.size(); ++i) {
