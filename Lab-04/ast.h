@@ -53,7 +53,6 @@ public:
         // TODO: Implement this method
         // Should generate code for variable access or array access
         if (!has_index()) {
-            // Output variable value to match code1.txt format - add a temp variable assignment
             string result_temp = "t" + to_string(temp_count++);
             outcode << result_temp << " = " << name << "\n";
             return result_temp;
@@ -108,7 +107,7 @@ public:
                         int& temp_count, int& label_count) const override {
         // TODO: Implement this method
         // Should generate code for binary operations
-        // Generate code for the operands exactly as in code1.txt
+        // Generate code for the operands 
         string left_temp = left->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         string right_temp = right->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         
@@ -174,10 +173,9 @@ public:
             outcode << lhs->get_name() << "[" << index_temp << "] = " << rhs_temp << "\n";
             return lhs->get_name() + "[" + index_temp + "]";
         } else {
-            // Handle simple variable assignments matching code1.txt format exactly
+            // Handle simple variable assignments 
             outcode << lhs->get_name() << " = " << rhs_temp << "\n";
             
-            // Don't add a line generating the variable name after assignment
             return lhs->get_name();
         }
     }
@@ -206,7 +204,6 @@ public:
         // TODO: Implement this method
         // Should generate code for expression statements
         if (expr) {
-            // Generate code for the expression but don't add extra output
             return expr->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         }
         return "";
@@ -234,7 +231,7 @@ public:
                         int& temp_count, int& label_count) const override {
         // TODO: Implement this method
         // Should generate code for all statements in the block
-        // Generate code for all statements in the block to match code1.txt format
+        // Generate code for all statements in the block 
         for (auto stmt : statements) {
             stmt->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         }
@@ -271,7 +268,7 @@ public:
         // Generate code for the condition
         string cond_temp = condition->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         
-        // Use simpler format without explicit gotos to match code1.txt
+        // Use simpler format without explicit gotos 
         outcode << "if " << cond_temp << " goto " << label_then << "\n";
         outcode << "goto " << label_else << "\n";
                             
@@ -324,7 +321,7 @@ public:
         // Start label
         outcode << label_start << ":\n";
 
-        // Generate code for the condition with format matching code3.txt
+        // Generate code for the condition
         string cond_temp = condition->generate_code(outcode, symbol_to_temp, temp_count, label_count);
         outcode << "if " << cond_temp << " goto " << label_body << "\n";
         outcode << "goto " << label_end << "\n";
@@ -421,7 +418,7 @@ public:
                         int& temp_count, int& label_count) const override {
         // TODO: Implement this method
         // Should generate code for return statements
-        // Generate code for the expression exactly as in code1.txt
+        // Generate code for the expression 
         string expr_temp = expr ? expr->generate_code(outcode, symbol_to_temp, temp_count, label_count) : "";
         
         // Generate the return statement
@@ -450,10 +447,10 @@ public:
         // Should generate code for variable declarations
         for (const auto& var : vars) {
             if (var.second == 0) {
-                // Regular variable declaration - format matches code3.txt
+                // Regular variable declaration 
                 outcode << "// Declaration: " << type << " " << var.first << "\n";
             } else {
-                // Array declaration - format matches code3.txt
+                // Array declaration
                 outcode << "// Declaration: " << type << " " << var.first << "[" << var.second << "]\n";
             }
         }
@@ -487,9 +484,6 @@ public:
     
     string generate_code(ofstream& outcode, map<string, string>& symbol_to_temp,
                         int& temp_count, int& label_count) const override {
-        // TODO: Implement this method
-        // Should generate code for function declarations
-        // Format exactly like code3.txt
         outcode << "// Function: " << return_type << " " << name << "(";
         for (size_t i = 0; i < params.size(); ++i) {
             outcode << params[i].first << " " << params[i].second;
@@ -569,18 +563,18 @@ public:
                         int& temp_count, int& label_count) const override {
         vector<string> arg_temps;
         
-        // Generate code for each argument exactly matching code1.txt format
+        // Generate code for each argument
         for (auto arg : arguments) {
             string arg_temp = arg->generate_code(outcode, symbol_to_temp, temp_count, label_count);
             arg_temps.push_back(arg_temp);
         }
 
-        // Emit parameter passing code according to code1.txt format
+        // Emit parameter passing  
         for (size_t i = 0; i < arg_temps.size(); i++) {
             outcode << "param " << arg_temps[i] << "\n";
         }
 
-        // Generate the function call code according to code1.txt format
+        // Generate the function call  
         string result_temp = "t" + to_string(temp_count++);
         outcode << result_temp << " = call " << func_name << ", " << arg_temps.size() << "\n";
 
