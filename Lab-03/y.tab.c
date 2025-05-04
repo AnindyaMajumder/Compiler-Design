@@ -98,7 +98,7 @@ vector<string> param_types;
 // Helper function to report semantic errors
 void semantic_error(int line, string message) {
     error_count++;
-    errout << "Error at line " << line << ": " << message << endl;
+    errout << "At line no: " << line << " " << message << endl << endl;
     outlog << "Error at line " << line << ": " << message << endl;
 }
 
@@ -615,13 +615,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    99,    99,   110,   117,   126,   133,   142,   155,   171,
-     185,   199,   211,   225,   245,   267,   289,   296,   303,   312,
-     320,   330,   338,   349,   356,   365,   372,   380,   387,   394,
-     401,   408,   415,   422,   429,   439,   446,   455,   477,   507,
-     515,   539,   547,   559,   567,   579,   587,   603,   611,   655,
-     662,   669,   678,   686,   738,   746,   754,   762,   770,   780,
-     788,   796,   803
+       0,    99,    99,   110,   117,   126,   133,   142,   168,   197,
+     217,   231,   243,   257,   277,   299,   327,   334,   341,   350,
+     358,   368,   376,   387,   394,   403,   410,   418,   425,   432,
+     439,   446,   453,   460,   467,   477,   484,   493,   515,   545,
+     553,   576,   584,   596,   604,   616,   624,   640,   648,   696,
+     703,   710,   719,   727,   780,   788,   796,   804,   812,   822,
+     830,   838,   845
 };
 #endif
 
@@ -1671,7 +1671,20 @@ yyreduce:
 			
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
-            // However, note that the scope of the function and the scope of the compound statement are different.	
+            // Check if the function is already defined
+            symbol_info* existing_func = st->lookup((yyvsp[(2) - (6)])->get_name());
+            if(existing_func != NULL && existing_func->is_function()) {
+                semantic_error(lines, "Multiple declaration of function " + (yyvsp[(2) - (6)])->get_name());
+            } 
+            
+            // Insert the function into symbol table
+            symbol_info* func_symbol = new symbol_info((yyvsp[(2) - (6)])->get_name(), "ID", "Function");
+            func_symbol->set_data_type((yyvsp[(1) - (6)])->get_name());
+            func_symbol->set_param_types((yyvsp[(4) - (6)])->get_param_types());
+            func_symbol->set_param_names((yyvsp[(4) - (6)])->get_param_names());
+            st->insert(func_symbol);
+            
+            // Enter scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
@@ -1679,7 +1692,7 @@ yyreduce:
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 156 "syntax_analyzer.y"
+#line 169 "syntax_analyzer.y"
     {
 			
 			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
@@ -1689,7 +1702,20 @@ yyreduce:
 			
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
-            // However, note that the scope of the function and the scope of the compound statement are different.
+            // Check if the function is already defined
+            symbol_info* existing_func = st->lookup((yyvsp[(2) - (5)])->get_name());
+            if(existing_func != NULL && existing_func->is_function()) {
+                semantic_error(lines, "Multiple declaration of function " + (yyvsp[(2) - (5)])->get_name());
+            } 
+            
+            // Insert the function into symbol table
+            symbol_info* func_symbol = new symbol_info((yyvsp[(2) - (5)])->get_name(), "ID", "Function");
+            func_symbol->set_data_type((yyvsp[(1) - (5)])->get_name());
+            func_symbol->set_param_types({});
+            func_symbol->set_param_names({});
+            st->insert(func_symbol);
+            
+            // Enter scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
@@ -1697,16 +1723,22 @@ yyreduce:
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 172 "syntax_analyzer.y"
+#line 198 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (4)])->get_name()<<","<<(yyvsp[(3) - (4)])->get_name()<<" "<<(yyvsp[(4) - (4)])->get_name()<<endl<<endl;
 					
 			(yyval) = new symbol_info((yyvsp[(1) - (4)])->get_name()+","+(yyvsp[(3) - (4)])->get_name()+" "+(yyvsp[(4) - (4)])->get_name(),"param_list");
 			
+			// Check for duplicate parameter names
+			for(const auto& param_name : (yyvsp[(1) - (4)])->get_param_names()) {
+				if(param_name == (yyvsp[(4) - (4)])->get_name()) {
+					semantic_error(lines, "Multiple declaration of variable " + (yyvsp[(4) - (4)])->get_name() + " in parameter of foo2");
+					break;
+				}
+			}
+			
             // store the necessary information about the function parameters
-            // They will be needed when you want to enter the function into the symbol table
-
 			(yyval)->set_param_types((yyvsp[(1) - (4)])->get_param_types());
 			(yyval)->set_param_names((yyvsp[(1) - (4)])->get_param_names());
 			(yyval)->add_parameter((yyvsp[(3) - (4)])->get_name(), (yyvsp[(4) - (4)])->get_name());
@@ -1715,7 +1747,7 @@ yyreduce:
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 186 "syntax_analyzer.y"
+#line 218 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1733,7 +1765,7 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 200 "syntax_analyzer.y"
+#line 232 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<" "<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1749,7 +1781,7 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 212 "syntax_analyzer.y"
+#line 244 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1765,7 +1797,7 @@ yyreduce:
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 226 "syntax_analyzer.y"
+#line 258 "syntax_analyzer.y"
     {
 			outlog << "At line no: " << lines << " compound_statement : LCURL statements RCURL " << endl << endl;
 			outlog << "{\n" << (yyvsp[(2) - (3)])->get_name() << "\n}" << endl << endl;
@@ -1789,7 +1821,7 @@ yyreduce:
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 246 "syntax_analyzer.y"
+#line 278 "syntax_analyzer.y"
     {
 			outlog << "At line no: " << lines << " compound_statement : LCURL RCURL " << endl << endl;
 			outlog << "{\n}" << endl << endl;
@@ -1813,7 +1845,7 @@ yyreduce:
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 268 "syntax_analyzer.y"
+#line 300 "syntax_analyzer.y"
     {
     outlog << "At line no: " << lines << " var_declaration : type_specifier declaration_list SEMICOLON " << endl << endl;
     outlog << (yyvsp[(1) - (3)])->get_name() << " " << (yyvsp[(2) - (3)])->get_name() << ";" << endl << endl;
@@ -1822,6 +1854,12 @@ yyreduce:
 
 	// Insert necessary information about the variables in the symbol table
     data_type = (yyvsp[(1) - (3)])->get_name();
+    
+    // Check if variable type is void
+    if (data_type == "void") {
+        semantic_error(lines, "variable type can not be void");
+    }
+    
     string decl_list = (yyvsp[(2) - (3)])->get_name();
     size_t start = 0, end;
 
@@ -1837,7 +1875,7 @@ yyreduce:
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 290 "syntax_analyzer.y"
+#line 328 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : INT "<<endl<<endl;
 			outlog<<"int"<<endl<<endl;
@@ -1848,7 +1886,7 @@ yyreduce:
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 297 "syntax_analyzer.y"
+#line 335 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : FLOAT "<<endl<<endl;
 			outlog<<"float"<<endl<<endl;
@@ -1859,7 +1897,7 @@ yyreduce:
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 304 "syntax_analyzer.y"
+#line 342 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : VOID "<<endl<<endl;
 			outlog<<"void"<<endl<<endl;
@@ -1870,7 +1908,7 @@ yyreduce:
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 313 "syntax_analyzer.y"
+#line 351 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (3)])->get_name()+","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1882,7 +1920,7 @@ yyreduce:
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 321 "syntax_analyzer.y"
+#line 359 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (6)])->get_name()+","<<(yyvsp[(3) - (6)])->get_name()<<"["<<(yyvsp[(5) - (6)])->get_name()<<"]"<<endl<<endl;
@@ -1896,7 +1934,7 @@ yyreduce:
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 331 "syntax_analyzer.y"
+#line 369 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1908,7 +1946,7 @@ yyreduce:
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 339 "syntax_analyzer.y"
+#line 377 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
@@ -1920,7 +1958,7 @@ yyreduce:
 
   case 23:
 /* Line 1792 of yacc.c  */
-#line 350 "syntax_analyzer.y"
+#line 388 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1931,7 +1969,7 @@ yyreduce:
 
   case 24:
 /* Line 1792 of yacc.c  */
-#line 357 "syntax_analyzer.y"
+#line 395 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statements statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<"\n"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1942,7 +1980,7 @@ yyreduce:
 
   case 25:
 /* Line 1792 of yacc.c  */
-#line 366 "syntax_analyzer.y"
+#line 404 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : var_declaration "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1953,7 +1991,7 @@ yyreduce:
 
   case 26:
 /* Line 1792 of yacc.c  */
-#line 373 "syntax_analyzer.y"
+#line 411 "syntax_analyzer.y"
     {
 	  		outlog<<"At line no: "<<lines<<" statement : func_definition "<<endl<<endl;
             outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1965,7 +2003,7 @@ yyreduce:
 
   case 27:
 /* Line 1792 of yacc.c  */
-#line 381 "syntax_analyzer.y"
+#line 419 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : expression_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1976,7 +2014,7 @@ yyreduce:
 
   case 28:
 /* Line 1792 of yacc.c  */
-#line 388 "syntax_analyzer.y"
+#line 426 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : compound_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1987,7 +2025,7 @@ yyreduce:
 
   case 29:
 /* Line 1792 of yacc.c  */
-#line 395 "syntax_analyzer.y"
+#line 433 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement "<<endl<<endl;
 			outlog<<"for("<<(yyvsp[(3) - (7)])->get_name()<<(yyvsp[(4) - (7)])->get_name()<<(yyvsp[(5) - (7)])->get_name()<<")\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -1998,7 +2036,7 @@ yyreduce:
 
   case 30:
 /* Line 1792 of yacc.c  */
-#line 402 "syntax_analyzer.y"
+#line 440 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -2009,7 +2047,7 @@ yyreduce:
 
   case 31:
 /* Line 1792 of yacc.c  */
-#line 409 "syntax_analyzer.y"
+#line 447 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement ELSE statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (7)])->get_name()<<")\n"<<(yyvsp[(5) - (7)])->get_name()<<"\nelse\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -2020,7 +2058,7 @@ yyreduce:
 
   case 32:
 /* Line 1792 of yacc.c  */
-#line 416 "syntax_analyzer.y"
+#line 454 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : WHILE LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"while("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -2031,7 +2069,7 @@ yyreduce:
 
   case 33:
 /* Line 1792 of yacc.c  */
-#line 423 "syntax_analyzer.y"
+#line 461 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : PRINTLN LPAREN ID RPAREN SEMICOLON "<<endl<<endl;
 			outlog<<"printf("<<(yyvsp[(3) - (5)])->get_name()<<");"<<endl<<endl; 
@@ -2042,7 +2080,7 @@ yyreduce:
 
   case 34:
 /* Line 1792 of yacc.c  */
-#line 430 "syntax_analyzer.y"
+#line 468 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : RETURN expression SEMICOLON "<<endl<<endl;
 			outlog<<"return "<<(yyvsp[(2) - (3)])->get_name()<<";"<<endl<<endl;
@@ -2054,7 +2092,7 @@ yyreduce:
 
   case 35:
 /* Line 1792 of yacc.c  */
-#line 440 "syntax_analyzer.y"
+#line 478 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : SEMICOLON "<<endl<<endl;
 				outlog<<";"<<endl<<endl;
@@ -2065,7 +2103,7 @@ yyreduce:
 
   case 36:
 /* Line 1792 of yacc.c  */
-#line 447 "syntax_analyzer.y"
+#line 485 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : expression SEMICOLON "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (2)])->get_name()<<";"<<endl<<endl;
@@ -2076,7 +2114,7 @@ yyreduce:
 
   case 37:
 /* Line 1792 of yacc.c  */
-#line 456 "syntax_analyzer.y"
+#line 494 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" variable : ID "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2086,7 +2124,7 @@ yyreduce:
 		// Check if the variable is declared
 		symbol_info* var = st->lookup((yyvsp[(1) - (1)])->get_name());
 		if(var == NULL) {
-			semantic_error(lines, "Undeclared variable '" + (yyvsp[(1) - (1)])->get_name() + "'");
+			semantic_error(lines, "Undeclared variable " + (yyvsp[(1) - (1)])->get_name());
 			(yyval)->set_data_type("error");
 		} else {
 			(yyval)->set_data_type(var->get_data_type());
@@ -2094,7 +2132,7 @@ yyreduce:
 			
 			// Check if it's an array being used without index
 			if(var->is_array()) {
-				semantic_error(lines, "Array '" + (yyvsp[(1) - (1)])->get_name() + "' used without index");
+				semantic_error(lines, "variable is of array type : " + (yyvsp[(1) - (1)])->get_name());
 			}
 		}
 	 }
@@ -2102,7 +2140,7 @@ yyreduce:
 
   case 38:
 /* Line 1792 of yacc.c  */
-#line 478 "syntax_analyzer.y"
+#line 516 "syntax_analyzer.y"
     {
 	 	outlog<<"At line no: "<<lines<<" variable : ID LTHIRD expression RTHIRD "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
@@ -2112,12 +2150,12 @@ yyreduce:
 		// Check if the array is declared
 		symbol_info* var = st->lookup((yyvsp[(1) - (4)])->get_name());
 		if(var == NULL) {
-			semantic_error(lines, "Undeclared array '" + (yyvsp[(1) - (4)])->get_name() + "'");
+			semantic_error(lines, "Undeclared variable " + (yyvsp[(1) - (4)])->get_name());
 			(yyval)->set_data_type("error");
 		} else {
 			// Check if it's actually an array
 			if(!var->is_array()) {
-				semantic_error(lines, "'" + (yyvsp[(1) - (4)])->get_name() + "' is not an array");
+				semantic_error(lines, "variable is not of array type : " + (yyvsp[(1) - (4)])->get_name());
 				(yyval)->set_data_type(var->get_data_type());
 			} else {
 				(yyval)->set_data_type(var->get_data_type());
@@ -2125,7 +2163,7 @@ yyreduce:
 				
 				// Check if index is integer
 				if((yyvsp[(3) - (4)])->get_data_type() != "int") {
-					semantic_error(lines, "Array index must be an integer");
+					semantic_error(lines, "array index is not of integer type : " + (yyvsp[(1) - (4)])->get_name());
 				}
 			}
 		}
@@ -2134,7 +2172,7 @@ yyreduce:
 
   case 39:
 /* Line 1792 of yacc.c  */
-#line 508 "syntax_analyzer.y"
+#line 546 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2146,7 +2184,7 @@ yyreduce:
 
   case 40:
 /* Line 1792 of yacc.c  */
-#line 516 "syntax_analyzer.y"
+#line 554 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : variable ASSIGNOP logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<"="<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2155,13 +2193,12 @@ yyreduce:
 			
 			// Check if types are compatible
 			if((yyvsp[(1) - (3)])->get_data_type() != "error" && (yyvsp[(3) - (3)])->get_data_type() != "error") {
-				// For type compatibility check
 				if(!type_compatible((yyvsp[(1) - (3)])->get_data_type(), (yyvsp[(3) - (3)])->get_data_type())) {
 					semantic_error(lines, "Type mismatch in assignment. " + (yyvsp[(1) - (3)])->get_data_type() + " variable cannot be assigned " + (yyvsp[(3) - (3)])->get_data_type() + " value");
 				} 
 				// Warning for possible precision loss
 				else if((yyvsp[(1) - (3)])->get_data_type() == "int" && (yyvsp[(3) - (3)])->get_data_type() == "float") {
-					semantic_error(lines, "Warning: possible loss of precision in assignment of FLOAT to INT");
+					semantic_error(lines, "Warning: Assignment of float value into variable of integer type ");
 				}
 				(yyval)->set_data_type((yyvsp[(1) - (3)])->get_data_type());
 			} else {
@@ -2172,7 +2209,7 @@ yyreduce:
 
   case 41:
 /* Line 1792 of yacc.c  */
-#line 540 "syntax_analyzer.y"
+#line 577 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2184,7 +2221,7 @@ yyreduce:
 
   case 42:
 /* Line 1792 of yacc.c  */
-#line 548 "syntax_analyzer.y"
+#line 585 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression LOGICOP rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2198,7 +2235,7 @@ yyreduce:
 
   case 43:
 /* Line 1792 of yacc.c  */
-#line 560 "syntax_analyzer.y"
+#line 597 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2210,7 +2247,7 @@ yyreduce:
 
   case 44:
 /* Line 1792 of yacc.c  */
-#line 568 "syntax_analyzer.y"
+#line 605 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression RELOP simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2224,7 +2261,7 @@ yyreduce:
 
   case 45:
 /* Line 1792 of yacc.c  */
-#line 580 "syntax_analyzer.y"
+#line 617 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2236,7 +2273,7 @@ yyreduce:
 
   case 46:
 /* Line 1792 of yacc.c  */
-#line 588 "syntax_analyzer.y"
+#line 625 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : simple_expression ADDOP term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2254,7 +2291,7 @@ yyreduce:
 
   case 47:
 /* Line 1792 of yacc.c  */
-#line 604 "syntax_analyzer.y"
+#line 641 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2266,7 +2303,7 @@ yyreduce:
 
   case 48:
 /* Line 1792 of yacc.c  */
-#line 612 "syntax_analyzer.y"
+#line 649 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : term MULOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2279,10 +2316,14 @@ yyreduce:
 			// Both operands should be integers for modulus
 			if(op == "%") {
 				if((yyvsp[(1) - (3)])->get_data_type() != "int" || (yyvsp[(3) - (3)])->get_data_type() != "int") {
-					semantic_error(lines, "Operands of modulus operator must be integers");
+					semantic_error(lines, "Modulus operator on non integer type");
 					(yyval)->set_data_type("error");
 				} else {
 					(yyval)->set_data_type("int");
+				}
+				if((yyvsp[(3) - (3)])->get_name() == "0") {
+					semantic_error(lines, "Modulus by 0 ");
+					(yyval)->set_data_type("error");
 				}
 			} 
 			// Check for division by zero (for constants)
@@ -2312,7 +2353,7 @@ yyreduce:
 
   case 49:
 /* Line 1792 of yacc.c  */
-#line 656 "syntax_analyzer.y"
+#line 697 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : ADDOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2323,7 +2364,7 @@ yyreduce:
 
   case 50:
 /* Line 1792 of yacc.c  */
-#line 663 "syntax_analyzer.y"
+#line 704 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : NOT unary_expression "<<endl<<endl;
 			outlog<<"!"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2334,7 +2375,7 @@ yyreduce:
 
   case 51:
 /* Line 1792 of yacc.c  */
-#line 670 "syntax_analyzer.y"
+#line 711 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : factor "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2345,7 +2386,7 @@ yyreduce:
 
   case 52:
 /* Line 1792 of yacc.c  */
-#line 679 "syntax_analyzer.y"
+#line 720 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2357,7 +2398,7 @@ yyreduce:
 
   case 53:
 /* Line 1792 of yacc.c  */
-#line 687 "syntax_analyzer.y"
+#line 728 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : ID LPAREN argument_list RPAREN "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"("<<(yyvsp[(3) - (4)])->get_name()<<")"<<endl<<endl;
@@ -2367,7 +2408,7 @@ yyreduce:
 		// Check if the function exists
 		symbol_info* func = st->lookup((yyvsp[(1) - (4)])->get_name());
 		if(func == NULL) {
-			semantic_error(lines, "Undeclared function '" + (yyvsp[(1) - (4)])->get_name() + "'");
+			semantic_error(lines, "Undeclared function: " + (yyvsp[(1) - (4)])->get_name());
 			(yyval)->set_data_type("error");
 		} else {
 			// Check if it's actually a function
@@ -2377,7 +2418,7 @@ yyreduce:
 			} else {
 				// Check if it's a void function used in an expression
 				if(func->get_data_type() == "void") {
-					semantic_error(lines, "Void function '" + (yyvsp[(1) - (4)])->get_name() + "' cannot be used in an expression");
+					semantic_error(lines, "operation on void type ");
 					(yyval)->set_data_type("error");
 				} else {
 					(yyval)->set_data_type(func->get_data_type());
@@ -2398,13 +2439,14 @@ yyreduce:
 				// Check if the number of arguments matches
 				vector<string> param_types = func->get_param_types();
 				if(arg_list.size() != param_types.size()) {
-					semantic_error(lines, "Function '" + (yyvsp[(1) - (4)])->get_name() + "' called with wrong number of arguments. Expected " + 
-						to_string(param_types.size()) + ", got " + to_string(arg_list.size()));
+					semantic_error(lines, "Inconsistencies in number of arguments in function call: " + (yyvsp[(1) - (4)])->get_name());
 				} else {
 					// Check if argument types match parameter types
-					// This needs more sophisticated type checking based on the actual type of each argument
-					// For now, this is a placeholder for more complex type checking
-					// You would need to track the type of each expression in the argument list
+					for(size_t i = 0; i < arg_list.size(); i++) {
+						if(!type_compatible(param_types[i], arg_list[i])) {
+							semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + (yyvsp[(1) - (4)])->get_name());
+						}
+					}
 				}
 			}
 		}
@@ -2413,7 +2455,7 @@ yyreduce:
 
   case 54:
 /* Line 1792 of yacc.c  */
-#line 739 "syntax_analyzer.y"
+#line 781 "syntax_analyzer.y"
     {
 	   	outlog<<"At line no: "<<lines<<" factor : LPAREN expression RPAREN "<<endl<<endl;
 		outlog<<"("<<(yyvsp[(2) - (3)])->get_name()<<")"<<endl<<endl;
@@ -2425,7 +2467,7 @@ yyreduce:
 
   case 55:
 /* Line 1792 of yacc.c  */
-#line 747 "syntax_analyzer.y"
+#line 789 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_INT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2437,7 +2479,7 @@ yyreduce:
 
   case 56:
 /* Line 1792 of yacc.c  */
-#line 755 "syntax_analyzer.y"
+#line 797 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_FLOAT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2449,7 +2491,7 @@ yyreduce:
 
   case 57:
 /* Line 1792 of yacc.c  */
-#line 763 "syntax_analyzer.y"
+#line 805 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable INCOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"++"<<endl<<endl;
@@ -2461,7 +2503,7 @@ yyreduce:
 
   case 58:
 /* Line 1792 of yacc.c  */
-#line 771 "syntax_analyzer.y"
+#line 813 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable DECOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"--"<<endl<<endl;
@@ -2473,7 +2515,7 @@ yyreduce:
 
   case 59:
 /* Line 1792 of yacc.c  */
-#line 781 "syntax_analyzer.y"
+#line 823 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list : arguments "<<endl<<endl;
 					outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2484,7 +2526,7 @@ yyreduce:
 
   case 60:
 /* Line 1792 of yacc.c  */
-#line 788 "syntax_analyzer.y"
+#line 830 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list :  "<<endl<<endl;
 					outlog<<""<<endl<<endl;
@@ -2495,7 +2537,7 @@ yyreduce:
 
   case 61:
 /* Line 1792 of yacc.c  */
-#line 797 "syntax_analyzer.y"
+#line 839 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : arguments COMMA logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2506,18 +2548,18 @@ yyreduce:
 
   case 62:
 /* Line 1792 of yacc.c  */
-#line 804 "syntax_analyzer.y"
+#line 846 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
 						
 				(yyval) = new symbol_info((yyvsp[(1) - (1)])->get_name(),"arg");
-		  }
+	      }
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 2521 "y.tab.c"
+#line 2563 "y.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2749,7 +2791,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 813 "syntax_analyzer.y"
+#line 855 "syntax_analyzer.y"
 
 
 int main(int argc, char *argv[])

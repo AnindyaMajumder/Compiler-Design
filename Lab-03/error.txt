@@ -1,32 +1,78 @@
-Error at line 13: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 21: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 25: Undeclared variable 'd'
-Error at line 41: Undeclared function 'func'
-Error at line 44: Array 'c' used without index
-Error at line 44: Undeclared function 'correct_foo'
-Error at line 44: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 45: Undeclared function 'correct_foo'
-Error at line 45: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 47: Undeclared variable 'k'
-Error at line 48: 'b' is not an array
-Error at line 48: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 49: Array index must be an integer
-Error at line 49: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 50: Array index must be an integer
-Error at line 50: Undeclared function 'foo4'
-Error at line 51: Array index must be an integer
-Error at line 51: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 52: Array index must be an integer
-Error at line 52: Undeclared function 'foo4'
-Error at line 53: Array index must be an integer
-Error at line 53: Array index must be an integer
-Error at line 53: Undeclared function 'foo4'
-Error at line 53: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 54: Array index must be an integer
-Error at line 54: Type mismatch in assignment. int variable cannot be assigned  value
-Error at line 55: Operands of modulus operator must be integers
-Error at line 56: Operands of modulus operator must be integers
-Error at line 58: Undeclared function 'foo5'
-Error at line 58: Type mismatch in assignment. int variable cannot be assigned  value
+At line no: 13 Type mismatch in assignment. int variable cannot be assigned  value
 
-Total errors: 30
+At line no: 16 Multiple declaration of variable a in parameter of foo2
+
+At line no: 21 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 25 Undeclared variable d
+
+At line no: 38 variable type can not be void
+
+At line no: 41 argument 1 type mismatch in function call: func
+
+At line no: 41 argument 2 type mismatch in function call: func
+
+At line no: 44 variable is of array type : c
+
+At line no: 44 argument 1 type mismatch in function call: correct_foo
+
+At line no: 44 argument 2 type mismatch in function call: correct_foo
+
+At line no: 44 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 45 Inconsistencies in number of arguments in function call: correct_foo
+
+At line no: 45 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 47 Undeclared variable k
+
+At line no: 48 variable is not of array type : b
+
+At line no: 48 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 49 array index is not of integer type : c
+
+At line no: 49 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 50 array index is not of integer type : c
+
+At line no: 50 operation on void type 
+
+At line no: 50 argument 1 type mismatch in function call: foo4
+
+At line no: 51 array index is not of integer type : c
+
+At line no: 51 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 52 array index is not of integer type : c
+
+At line no: 52 operation on void type 
+
+At line no: 52 argument 1 type mismatch in function call: foo4
+
+At line no: 53 array index is not of integer type : c
+
+At line no: 53 array index is not of integer type : c
+
+At line no: 53 operation on void type 
+
+At line no: 53 argument 1 type mismatch in function call: foo4
+
+At line no: 53 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 54 array index is not of integer type : c
+
+At line no: 54 Type mismatch in assignment. int variable cannot be assigned  value
+
+At line no: 55 Modulus operator on non integer type
+
+At line no: 55 Modulus by 0 
+
+At line no: 56 Modulus operator on non integer type
+
+At line no: 58 Undeclared function: foo5
+
+At line no: 58 Type mismatch in assignment. int variable cannot be assigned  value
+
+
+Total errors: 38

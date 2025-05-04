@@ -32,7 +32,7 @@ vector<string> param_types;
 // Helper function to report semantic errors
 void semantic_error(int line, string message) {
     error_count++;
-    errout << "Error at line " << line << ": " << message << endl;
+    errout << "At line no: " << line << " " << message << endl << endl;
     outlog << "Error at line " << line << ": " << message << endl;
 }
 
@@ -148,7 +148,20 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 			
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
-            // However, note that the scope of the function and the scope of the compound statement are different.	
+            // Check if the function is already defined
+            symbol_info* existing_func = st->lookup($2->get_name());
+            if(existing_func != NULL && existing_func->is_function()) {
+                semantic_error(lines, "Multiple declaration of function " + $2->get_name());
+            } 
+            
+            // Insert the function into symbol table
+            symbol_info* func_symbol = new symbol_info($2->get_name(), "ID", "Function");
+            func_symbol->set_data_type($1->get_name());
+            func_symbol->set_param_types($4->get_param_types());
+            func_symbol->set_param_names($4->get_param_names());
+            st->insert(func_symbol);
+            
+            // Enter scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
@@ -162,7 +175,20 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statem
 			
 			// The function definition is complete.
             // You can now insert necessary information about the function into the symbol table
-            // However, note that the scope of the function and the scope of the compound statement are different.
+            // Check if the function is already defined
+            symbol_info* existing_func = st->lookup($2->get_name());
+            if(existing_func != NULL && existing_func->is_function()) {
+                semantic_error(lines, "Multiple declaration of function " + $2->get_name());
+            } 
+            
+            // Insert the function into symbol table
+            symbol_info* func_symbol = new symbol_info($2->get_name(), "ID", "Function");
+            func_symbol->set_data_type($1->get_name());
+            func_symbol->set_param_types({});
+            func_symbol->set_param_names({});
+            st->insert(func_symbol);
+            
+            // Enter scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
 		}
@@ -175,9 +201,15 @@ parameter_list : parameter_list COMMA type_specifier ID
 					
 			$$ = new symbol_info($1->get_name()+","+$3->get_name()+" "+$4->get_name(),"param_list");
 			
+			// Check for duplicate parameter names
+			for(const auto& param_name : $1->get_param_names()) {
+				if(param_name == $4->get_name()) {
+					semantic_error(lines, "Multiple declaration of variable " + $4->get_name() + " in parameter of foo2");
+					break;
+				}
+			}
+			
             // store the necessary information about the function parameters
-            // They will be needed when you want to enter the function into the symbol table
-
 			$$->set_param_types($1->get_param_types());
 			$$->set_param_names($1->get_param_names());
 			$$->add_parameter($3->get_name(), $4->get_name());
@@ -273,6 +305,12 @@ var_declaration : type_specifier declaration_list SEMICOLON
 
 	// Insert necessary information about the variables in the symbol table
     data_type = $1->get_name();
+    
+    // Check if variable type is void
+    if (data_type == "void") {
+        semantic_error(lines, "variable type can not be void");
+    }
+    
     string decl_list = $2->get_name();
     size_t start = 0, end;
 
@@ -462,7 +500,7 @@ variable : ID
 		// Check if the variable is declared
 		symbol_info* var = st->lookup($1->get_name());
 		if(var == NULL) {
-			semantic_error(lines, "Undeclared variable '" + $1->get_name() + "'");
+			semantic_error(lines, "Undeclared variable " + $1->get_name());
 			$$->set_data_type("error");
 		} else {
 			$$->set_data_type(var->get_data_type());
@@ -470,7 +508,7 @@ variable : ID
 			
 			// Check if it's an array being used without index
 			if(var->is_array()) {
-				semantic_error(lines, "Array '" + $1->get_name() + "' used without index");
+				semantic_error(lines, "variable is of array type : " + $1->get_name());
 			}
 		}
 	 }	
@@ -484,12 +522,12 @@ variable : ID
 		// Check if the array is declared
 		symbol_info* var = st->lookup($1->get_name());
 		if(var == NULL) {
-			semantic_error(lines, "Undeclared array '" + $1->get_name() + "'");
+			semantic_error(lines, "Undeclared variable " + $1->get_name());
 			$$->set_data_type("error");
 		} else {
 			// Check if it's actually an array
 			if(!var->is_array()) {
-				semantic_error(lines, "'" + $1->get_name() + "' is not an array");
+				semantic_error(lines, "variable is not of array type : " + $1->get_name());
 				$$->set_data_type(var->get_data_type());
 			} else {
 				$$->set_data_type(var->get_data_type());
@@ -497,7 +535,7 @@ variable : ID
 				
 				// Check if index is integer
 				if($3->get_data_type() != "int") {
-					semantic_error(lines, "Array index must be an integer");
+					semantic_error(lines, "array index is not of integer type : " + $1->get_name());
 				}
 			}
 		}
@@ -521,13 +559,12 @@ expression : logic_expression
 			
 			// Check if types are compatible
 			if($1->get_data_type() != "error" && $3->get_data_type() != "error") {
-				// For type compatibility check
 				if(!type_compatible($1->get_data_type(), $3->get_data_type())) {
 					semantic_error(lines, "Type mismatch in assignment. " + $1->get_data_type() + " variable cannot be assigned " + $3->get_data_type() + " value");
 				} 
 				// Warning for possible precision loss
 				else if($1->get_data_type() == "int" && $3->get_data_type() == "float") {
-					semantic_error(lines, "Warning: possible loss of precision in assignment of FLOAT to INT");
+					semantic_error(lines, "Warning: Assignment of float value into variable of integer type ");
 				}
 				$$->set_data_type($1->get_data_type());
 			} else {
@@ -621,10 +658,14 @@ term :	unary_expression
 			// Both operands should be integers for modulus
 			if(op == "%") {
 				if($1->get_data_type() != "int" || $3->get_data_type() != "int") {
-					semantic_error(lines, "Operands of modulus operator must be integers");
+					semantic_error(lines, "Modulus operator on non integer type");
 					$$->set_data_type("error");
 				} else {
 					$$->set_data_type("int");
+				}
+				if($3->get_name() == "0") {
+					semantic_error(lines, "Modulus by 0 ");
+					$$->set_data_type("error");
 				}
 			} 
 			// Check for division by zero (for constants)
@@ -693,7 +734,7 @@ factor	: variable
 		// Check if the function exists
 		symbol_info* func = st->lookup($1->get_name());
 		if(func == NULL) {
-			semantic_error(lines, "Undeclared function '" + $1->get_name() + "'");
+			semantic_error(lines, "Undeclared function: " + $1->get_name());
 			$$->set_data_type("error");
 		} else {
 			// Check if it's actually a function
@@ -703,7 +744,7 @@ factor	: variable
 			} else {
 				// Check if it's a void function used in an expression
 				if(func->get_data_type() == "void") {
-					semantic_error(lines, "Void function '" + $1->get_name() + "' cannot be used in an expression");
+					semantic_error(lines, "operation on void type ");
 					$$->set_data_type("error");
 				} else {
 					$$->set_data_type(func->get_data_type());
@@ -724,13 +765,14 @@ factor	: variable
 				// Check if the number of arguments matches
 				vector<string> param_types = func->get_param_types();
 				if(arg_list.size() != param_types.size()) {
-					semantic_error(lines, "Function '" + $1->get_name() + "' called with wrong number of arguments. Expected " + 
-						to_string(param_types.size()) + ", got " + to_string(arg_list.size()));
+					semantic_error(lines, "Inconsistencies in number of arguments in function call: " + $1->get_name());
 				} else {
 					// Check if argument types match parameter types
-					// This needs more sophisticated type checking based on the actual type of each argument
-					// For now, this is a placeholder for more complex type checking
-					// You would need to track the type of each expression in the argument list
+					for(size_t i = 0; i < arg_list.size(); i++) {
+						if(!type_compatible(param_types[i], arg_list[i])) {
+							semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + $1->get_name());
+						}
+					}
 				}
 			}
 		}
@@ -806,7 +848,7 @@ arguments : arguments COMMA logic_expression
 				outlog<<$1->get_name()<<endl<<endl;
 						
 				$$ = new symbol_info($1->get_name(),"arg");
-		  }
+	      }
 	      ;
  
 
