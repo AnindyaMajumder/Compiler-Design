@@ -16,8 +16,10 @@ extern YYSTYPE yylval;
 symbol_table *st;
 
 int lines = 1;
+int error_count = 0;
 
 ofstream outlog;
+ofstream errout;
 
 // you may declare other necessary variables here to store necessary info
 // such as current variable type, variable list, function name, return type, function parameter types, parameters names etc.
@@ -26,6 +28,21 @@ string data_type;
 int array_size;
 vector<string> param_names;
 vector<string> param_types;
+
+// Helper function to report semantic errors
+void semantic_error(int line, string message) {
+    error_count++;
+    errout << "Error at line " << line << ": " << message << endl;
+    outlog << "Error at line " << line << ": " << message << endl;
+}
+
+// Helper function to type check
+bool type_compatible(string type1, string type2) {
+    if (type1 == type2) return true;
+    if (type1 == "float" && type2 == "int") return true;
+    
+    return false;
+}
 
 // helper functions
 vector<string> split(const string& str, char delim) {
@@ -442,6 +459,20 @@ variable : ID
 			
 		$$ = new symbol_info($1->get_name(),"varbl");
 		
+		// Check if the variable is declared
+		symbol_info* var = st->lookup($1->get_name());
+		if(var == NULL) {
+			semantic_error(lines, "Undeclared variable '" + $1->get_name() + "'");
+			$$->set_data_type("error");
+		} else {
+			$$->set_data_type(var->get_data_type());
+			$$->set_symbol_type(var->get_symbol_type());
+			
+			// Check if it's an array being used without index
+			if(var->is_array()) {
+				semantic_error(lines, "Array '" + $1->get_name() + "' used without index");
+			}
+		}
 	 }	
 	 | ID LTHIRD expression RTHIRD 
 	 {
@@ -449,6 +480,27 @@ variable : ID
 		outlog<<$1->get_name()<<"["<<$3->get_name()<<"]"<<endl<<endl;
 		
 		$$ = new symbol_info($1->get_name()+"["+$3->get_name()+"]","varbl");
+		
+		// Check if the array is declared
+		symbol_info* var = st->lookup($1->get_name());
+		if(var == NULL) {
+			semantic_error(lines, "Undeclared array '" + $1->get_name() + "'");
+			$$->set_data_type("error");
+		} else {
+			// Check if it's actually an array
+			if(!var->is_array()) {
+				semantic_error(lines, "'" + $1->get_name() + "' is not an array");
+				$$->set_data_type(var->get_data_type());
+			} else {
+				$$->set_data_type(var->get_data_type());
+				$$->set_symbol_type("Array");
+				
+				// Check if index is integer
+				if($3->get_data_type() != "int") {
+					semantic_error(lines, "Array index must be an integer");
+				}
+			}
+		}
 	 }
 	 ;
 	 
@@ -458,6 +510,7 @@ expression : logic_expression
 			outlog<<$1->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name(),"expr");
+			$$->set_data_type($1->get_data_type());
 	   }
 	   | variable ASSIGNOP logic_expression 	
 	   {
@@ -465,6 +518,21 @@ expression : logic_expression
 			outlog<<$1->get_name()<<"="<<$3->get_name()<<endl<<endl;
 
 			$$ = new symbol_info($1->get_name()+"="+$3->get_name(),"expr");
+			
+			// Check if types are compatible
+			if($1->get_data_type() != "error" && $3->get_data_type() != "error") {
+				// For type compatibility check
+				if(!type_compatible($1->get_data_type(), $3->get_data_type())) {
+					semantic_error(lines, "Type mismatch in assignment. " + $1->get_data_type() + " variable cannot be assigned " + $3->get_data_type() + " value");
+				} 
+				// Warning for possible precision loss
+				else if($1->get_data_type() == "int" && $3->get_data_type() == "float") {
+					semantic_error(lines, "Warning: possible loss of precision in assignment of FLOAT to INT");
+				}
+				$$->set_data_type($1->get_data_type());
+			} else {
+				$$->set_data_type("error");
+			}
 	   }
 	   ;
 			
@@ -474,6 +542,7 @@ logic_expression : rel_expression
 			outlog<<$1->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name(),"lgc_expr");
+			$$->set_data_type($1->get_data_type());
 	     }	
 		 | rel_expression LOGICOP rel_expression 
 		 {
@@ -481,6 +550,9 @@ logic_expression : rel_expression
 			outlog<<$1->get_name()<<$2->get_name()<<$3->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name()+$2->get_name()+$3->get_name(),"lgc_expr");
+			
+			// Result of logical operation should always be int
+			$$->set_data_type("int");
 	     }	
 		 ;
 			
@@ -490,6 +562,7 @@ rel_expression	: simple_expression
 			outlog<<$1->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name(),"rel_expr");
+			$$->set_data_type($1->get_data_type());
 	    }
 		| simple_expression RELOP simple_expression
 		{
@@ -497,6 +570,9 @@ rel_expression	: simple_expression
 			outlog<<$1->get_name()<<$2->get_name()<<$3->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name()+$2->get_name()+$3->get_name(),"rel_expr");
+			
+			// Result of relational operation should always be int
+			$$->set_data_type("int");
 	    }
 		;
 				
@@ -506,7 +582,7 @@ simple_expression : term
 			outlog<<$1->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name(),"simp_expr");
-			
+			$$->set_data_type($1->get_data_type());
 	      }
 		  | simple_expression ADDOP term 
 		  {
@@ -514,16 +590,23 @@ simple_expression : term
 			outlog<<$1->get_name()<<$2->get_name()<<$3->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name()+$2->get_name()+$3->get_name(),"simp_expr");
+			
+			// Type check for ADDOP
+			if($1->get_data_type() == "float" || $3->get_data_type() == "float") {
+				$$->set_data_type("float");
+			} else {
+				$$->set_data_type("int");
+			}
 	      }
 		  ;
 					
-term :	unary_expression //term can be void because of un_expr->factor
+term :	unary_expression
      {
 	    	outlog<<"At line no: "<<lines<<" term : unary_expression "<<endl<<endl;
 			outlog<<$1->get_name()<<endl<<endl;
 			
 			$$ = new symbol_info($1->get_name(),"term");
-			
+			$$->set_data_type($1->get_data_type());
 	 }
      |  term MULOP unary_expression
      {
@@ -532,6 +615,40 @@ term :	unary_expression //term can be void because of un_expr->factor
 			
 			$$ = new symbol_info($1->get_name()+$2->get_name()+$3->get_name(),"term");
 			
+			// Type checks for multiplication, division, and modulus
+			string op = $2->get_name();
+			
+			// Both operands should be integers for modulus
+			if(op == "%") {
+				if($1->get_data_type() != "int" || $3->get_data_type() != "int") {
+					semantic_error(lines, "Operands of modulus operator must be integers");
+					$$->set_data_type("error");
+				} else {
+					$$->set_data_type("int");
+				}
+			} 
+			// Check for division by zero (for constants)
+			else if(op == "/" || op == "%") {
+				if($3->get_name() == "0") {
+					semantic_error(lines, "Division by zero");
+					$$->set_data_type("error");
+				} 
+				else {
+					if(op == "/" && ($1->get_data_type() == "float" || $3->get_data_type() == "float")) {
+						$$->set_data_type("float");
+					} else {
+						$$->set_data_type("int");
+					}
+				}
+			}
+			// For multiplication
+			else {
+				if($1->get_data_type() == "float" || $3->get_data_type() == "float") {
+					$$->set_data_type("float");
+				} else {
+					$$->set_data_type("int");
+				}
+			}
 	 }
      ;
 
@@ -564,6 +681,7 @@ factor	: variable
 		outlog<<$1->get_name()<<endl<<endl;
 			
 		$$ = new symbol_info($1->get_name(),"fctr");
+		$$->set_data_type($1->get_data_type());
 	}
 	| ID LPAREN argument_list RPAREN
 	{
@@ -571,6 +689,51 @@ factor	: variable
 		outlog<<$1->get_name()<<"("<<$3->get_name()<<")"<<endl<<endl;
 
 		$$ = new symbol_info($1->get_name()+"("+$3->get_name()+")","fctr");
+		
+		// Check if the function exists
+		symbol_info* func = st->lookup($1->get_name());
+		if(func == NULL) {
+			semantic_error(lines, "Undeclared function '" + $1->get_name() + "'");
+			$$->set_data_type("error");
+		} else {
+			// Check if it's actually a function
+			if(!func->is_function()) {
+				semantic_error(lines, "'" + $1->get_name() + "' is not a function");
+				$$->set_data_type("error");
+			} else {
+				// Check if it's a void function used in an expression
+				if(func->get_data_type() == "void") {
+					semantic_error(lines, "Void function '" + $1->get_name() + "' cannot be used in an expression");
+					$$->set_data_type("error");
+				} else {
+					$$->set_data_type(func->get_data_type());
+				}
+				
+				// Split arguments from the argument list
+				vector<string> arg_list;
+				string args = $3->get_name();
+				if(!args.empty()) {
+					size_t start = 0, end;
+					while((end = args.find(',', start)) != string::npos) {
+						arg_list.push_back(args.substr(start, end - start));
+						start = end + 1;
+					}
+					arg_list.push_back(args.substr(start));
+				}
+				
+				// Check if the number of arguments matches
+				vector<string> param_types = func->get_param_types();
+				if(arg_list.size() != param_types.size()) {
+					semantic_error(lines, "Function '" + $1->get_name() + "' called with wrong number of arguments. Expected " + 
+						to_string(param_types.size()) + ", got " + to_string(arg_list.size()));
+				} else {
+					// Check if argument types match parameter types
+					// This needs more sophisticated type checking based on the actual type of each argument
+					// For now, this is a placeholder for more complex type checking
+					// You would need to track the type of each expression in the argument list
+				}
+			}
+		}
 	}
 	| LPAREN expression RPAREN
 	{
@@ -578,6 +741,7 @@ factor	: variable
 		outlog<<"("<<$2->get_name()<<")"<<endl<<endl;
 		
 		$$ = new symbol_info("("+$2->get_name()+")","fctr");
+		$$->set_data_type($2->get_data_type());
 	}
 	| CONST_INT 
 	{
@@ -585,6 +749,7 @@ factor	: variable
 		outlog<<$1->get_name()<<endl<<endl;
 			
 		$$ = new symbol_info($1->get_name(),"fctr");
+		$$->set_data_type("int");
 	}
 	| CONST_FLOAT
 	{
@@ -592,6 +757,7 @@ factor	: variable
 		outlog<<$1->get_name()<<endl<<endl;
 			
 		$$ = new symbol_info($1->get_name(),"fctr");
+		$$->set_data_type("float");
 	}
 	| variable INCOP 
 	{
@@ -599,6 +765,7 @@ factor	: variable
 		outlog<<$1->get_name()<<"++"<<endl<<endl;
 			
 		$$ = new symbol_info($1->get_name()+"++","fctr");
+		$$->set_data_type($1->get_data_type());
 	}
 	| variable DECOP
 	{
@@ -606,6 +773,7 @@ factor	: variable
 		outlog<<$1->get_name()<<"--"<<endl<<endl;
 			
 		$$ = new symbol_info($1->get_name()+"--","fctr");
+		$$->set_data_type($1->get_data_type());
 	}
 	;
 	
@@ -648,15 +816,20 @@ int main(int argc, char *argv[])
 {
 	if(argc != 2) 
 	{
-		cout<<"Please input file name"<<endl;
+		cout<<"Please provide input file name"<<endl;
 		return 0;
 	}
 	yyin = fopen(argv[1], "r");
-	outlog.open("my_log.txt", ios::trunc);
+	
+	// Extract student ID from filename and create output file names
+	string inputfile = argv[1];
+	
+	outlog.open("log.txt", ios::trunc);
+	errout.open("error.txt", ios::trunc);
 	
 	if(yyin == NULL)
 	{
-		cout<<"Couldn't open file"<<endl;
+		cout<<"Couldn't open input file"<<endl;
 		return 0;
 	}
 	// Enter the global or the first scope here
@@ -667,8 +840,13 @@ int main(int argc, char *argv[])
 	yyparse();
 	
 	outlog<<endl<<"Total lines: "<<lines<<endl;
+	outlog<<"Total errors: "<<error_count<<endl;
+	
+	// Add error count to error file too
+	errout<<endl<<"Total errors: "<<error_count<<endl;
 	
 	outlog.close();
+	errout.close();
 	
 	fclose(yyin);
 	

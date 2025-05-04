@@ -1,0 +1,32 @@
+Error at line 13: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 21: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 25: Undeclared variable 'd'
+Error at line 41: Undeclared function 'func'
+Error at line 44: Array 'c' used without index
+Error at line 44: Undeclared function 'correct_foo'
+Error at line 44: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 45: Undeclared function 'correct_foo'
+Error at line 45: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 47: Undeclared variable 'k'
+Error at line 48: 'b' is not an array
+Error at line 48: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 49: Array index must be an integer
+Error at line 49: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 50: Array index must be an integer
+Error at line 50: Undeclared function 'foo4'
+Error at line 51: Array index must be an integer
+Error at line 51: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 52: Array index must be an integer
+Error at line 52: Undeclared function 'foo4'
+Error at line 53: Array index must be an integer
+Error at line 53: Array index must be an integer
+Error at line 53: Undeclared function 'foo4'
+Error at line 53: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 54: Array index must be an integer
+Error at line 54: Type mismatch in assignment. int variable cannot be assigned  value
+Error at line 55: Operands of modulus operator must be integers
+Error at line 56: Operands of modulus operator must be integers
+Error at line 58: Undeclared function 'foo5'
+Error at line 58: Type mismatch in assignment. int variable cannot be assigned  value
+
+Total errors: 30
