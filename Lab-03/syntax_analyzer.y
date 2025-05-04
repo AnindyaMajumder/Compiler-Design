@@ -45,9 +45,7 @@ void semantic_error(int line, string message) {
 
 // Helper function to type check
 bool type_compatible(string type1, string type2) {
-    if (type1 == type2) return true;
-    if (type1 == "float" && type2 == "int") return true;
-    
+    if (type1 == type2) return true;    
     return false;
 }
 
