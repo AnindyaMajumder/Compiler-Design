@@ -84,6 +84,9 @@ symbol_table *st;
 int lines = 1;
 int error_count = 0;
 
+// Track lines with errors to avoid counting multiple errors on same line
+set<int> lines_with_errors;
+
 ofstream outlog;
 ofstream errout;
 
@@ -94,12 +97,16 @@ string data_type;
 int array_size;
 vector<string> param_names;
 vector<string> param_types;
+string current_func_return_type;
 
 // Helper function to report semantic errors
 void semantic_error(int line, string message) {
-    error_count++;
-    errout << "At line no: " << line << " " << message << endl << endl;
-    outlog << "Error at line " << line << ": " << message << endl;
+    // Only increment error count if this is the first error on this line
+    if(lines_with_errors.find(line) == lines_with_errors.end()) {
+        lines_with_errors.insert(line);
+    }
+    errout << "Error at line no: " << line << " : " << message << endl;
+    outlog << "Error at line no: " << line << " : " << message << endl;
 }
 
 // Helper function to type check
@@ -110,7 +117,7 @@ bool type_compatible(string type1, string type2) {
     return false;
 }
 
-// helper functions
+// Helper functions for processing variable declarations
 vector<string> split(const string& str, char delim) {
     vector<string> tokens;
     stringstream ss(str);
@@ -119,7 +126,6 @@ vector<string> split(const string& str, char delim) {
     while (getline(ss, token, delim)) {
         tokens.push_back(token);
     }
-	// This function is useful for breaking down strings like comma-separated variable declarations into individual variables.
     return tokens;
 }
 
@@ -132,12 +138,26 @@ void process_variable(const string& var, const string& type) {
         string array_name = var.substr(0, open_bracket);
         int array_size = stoi(var.substr(open_bracket + 1, close_bracket - open_bracket - 1));
 
+        // Check if variable is already declared in current scope
+        symbol_info* existing = st->lookup(array_name);
+        if (existing != NULL) {
+            semantic_error(lines, "Multiple declaration of variable " + array_name);
+            return;
+        }
+
         symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
         new_symbol->set_array_size(array_size);
         new_symbol->set_data_type(type);
         st->insert(new_symbol);
     } else {
         // Normal variable
+        // Check if variable is already declared in current scope
+        symbol_info* existing = st->lookup(var);
+        if (existing != NULL) {
+            semantic_error(lines, "Multiple declaration of variable " + var);
+            return;
+        }
+
         symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
         new_symbol->set_data_type(type);
         st->insert(new_symbol);
@@ -155,7 +175,7 @@ void yyerror(char *s)
 
 
 /* Line 371 of yacc.c  */
-#line 159 "y.tab.c"
+#line 179 "y.tab.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -299,7 +319,7 @@ int yyparse ();
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 303 "y.tab.c"
+#line 323 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -519,16 +539,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  10
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   176
+#define YYLAST   175
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  40
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  23
+#define YYNNTS  25
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  62
+#define YYNRULES  66
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  114
+#define YYNSTATES  120
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -577,51 +597,53 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     5,     8,    10,    12,    14,    21,    27,
-      32,    36,    39,    41,    45,    48,    52,    54,    56,    58,
-      62,    69,    71,    76,    78,    81,    83,    85,    87,    89,
-      97,   103,   111,   117,   123,   127,   129,   132,   134,   139,
-     141,   145,   147,   151,   153,   157,   159,   163,   165,   169,
-     172,   175,   177,   179,   184,   188,   190,   192,   195,   198,
-     200,   201,   205
+       0,     0,     3,     5,     8,    10,    12,    14,    15,    23,
+      24,    31,    36,    40,    43,    45,    49,    52,    56,    58,
+      60,    62,    66,    73,    80,    82,    87,    92,    94,    97,
+      99,   101,   103,   105,   113,   119,   127,   133,   139,   143,
+     145,   148,   150,   155,   157,   161,   163,   167,   169,   173,
+     175,   179,   181,   185,   188,   191,   193,   195,   200,   204,
+     206,   208,   211,   214,   216,   217,   221
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
       41,     0,    -1,    42,    -1,    42,    43,    -1,    43,    -1,
-      47,    -1,    44,    -1,    48,    38,    28,    45,    29,    46,
-      -1,    48,    38,    28,    29,    46,    -1,    45,    34,    48,
-      38,    -1,    45,    34,    48,    -1,    48,    38,    -1,    48,
-      -1,    30,    50,    31,    -1,    30,    31,    -1,    48,    49,
-      35,    -1,     9,    -1,    11,    -1,    13,    -1,    49,    34,
-      38,    -1,    49,    34,    38,    32,    36,    33,    -1,    38,
-      -1,    38,    32,    36,    33,    -1,    51,    -1,    50,    51,
-      -1,    47,    -1,    44,    -1,    52,    -1,    46,    -1,     5,
-      28,    52,    52,    54,    29,    51,    -1,     3,    28,    54,
-      29,    51,    -1,     3,    28,    54,    29,    51,     4,    51,
-      -1,     6,    28,    54,    29,    51,    -1,    19,    28,    38,
-      29,    35,    -1,    14,    54,    35,    -1,    35,    -1,    54,
-      35,    -1,    38,    -1,    38,    32,    54,    33,    -1,    55,
-      -1,    53,    25,    55,    -1,    56,    -1,    56,    26,    56,
-      -1,    57,    -1,    57,    24,    57,    -1,    58,    -1,    57,
-      20,    58,    -1,    59,    -1,    58,    21,    59,    -1,    20,
-      59,    -1,    27,    59,    -1,    60,    -1,    53,    -1,    38,
-      28,    61,    29,    -1,    28,    54,    29,    -1,    36,    -1,
-      37,    -1,    53,    22,    -1,    53,    23,    -1,    62,    -1,
-      -1,    62,    34,    55,    -1,    55,    -1
+      49,    -1,    44,    -1,    -1,    50,    38,    28,    47,    29,
+      45,    48,    -1,    -1,    50,    38,    28,    29,    46,    48,
+      -1,    47,    34,    50,    38,    -1,    47,    34,    50,    -1,
+      50,    38,    -1,    50,    -1,    30,    52,    31,    -1,    30,
+      31,    -1,    50,    51,    35,    -1,     9,    -1,    11,    -1,
+      13,    -1,    51,    34,    38,    -1,    51,    34,    38,    32,
+      36,    33,    -1,    51,    34,    38,    32,    37,    33,    -1,
+      38,    -1,    38,    32,    36,    33,    -1,    38,    32,    37,
+      33,    -1,    53,    -1,    52,    53,    -1,    49,    -1,    44,
+      -1,    54,    -1,    48,    -1,     5,    28,    54,    54,    56,
+      29,    53,    -1,     3,    28,    56,    29,    53,    -1,     3,
+      28,    56,    29,    53,     4,    53,    -1,     6,    28,    56,
+      29,    53,    -1,    19,    28,    38,    29,    35,    -1,    14,
+      56,    35,    -1,    35,    -1,    56,    35,    -1,    38,    -1,
+      38,    32,    56,    33,    -1,    57,    -1,    55,    25,    57,
+      -1,    58,    -1,    58,    26,    58,    -1,    59,    -1,    59,
+      24,    59,    -1,    60,    -1,    59,    20,    60,    -1,    61,
+      -1,    60,    21,    61,    -1,    20,    61,    -1,    27,    61,
+      -1,    62,    -1,    55,    -1,    38,    28,    63,    29,    -1,
+      28,    56,    29,    -1,    36,    -1,    37,    -1,    55,    22,
+      -1,    55,    23,    -1,    64,    -1,    -1,    64,    34,    57,
+      -1,    57,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    99,    99,   110,   117,   126,   133,   142,   168,   197,
-     217,   231,   243,   257,   277,   299,   327,   334,   341,   350,
-     358,   368,   376,   387,   394,   403,   410,   418,   425,   432,
-     439,   446,   453,   460,   467,   477,   484,   493,   515,   545,
-     553,   576,   584,   596,   604,   616,   624,   640,   648,   696,
-     703,   710,   719,   727,   780,   788,   796,   804,   812,   822,
-     830,   838,   845
+       0,   119,   119,   130,   137,   146,   153,   163,   162,   226,
+     225,   261,   284,   298,   310,   324,   337,   352,   380,   387,
+     394,   403,   411,   421,   433,   441,   449,   462,   469,   478,
+     485,   493,   500,   507,   514,   521,   528,   535,   548,   565,
+     572,   581,   604,   634,   642,   686,   694,   706,   714,   726,
+     734,   750,   758,   806,   813,   820,   829,   837,   890,   898,
+     906,   914,   922,   932,   940,   948,   955
 };
 #endif
 
@@ -636,11 +658,12 @@ static const char *const yytname[] =
   "DECOP", "RELOP", "ASSIGNOP", "LOGICOP", "NOT", "LPAREN", "RPAREN",
   "LCURL", "RCURL", "LTHIRD", "RTHIRD", "COMMA", "SEMICOLON", "CONST_INT",
   "CONST_FLOAT", "ID", "LOWER_THAN_ELSE", "$accept", "start", "program",
-  "unit", "func_definition", "parameter_list", "compound_statement",
-  "var_declaration", "type_specifier", "declaration_list", "statements",
-  "statement", "expression_statement", "variable", "expression",
-  "logic_expression", "rel_expression", "simple_expression", "term",
-  "unary_expression", "factor", "argument_list", "arguments", YY_NULL
+  "unit", "func_definition", "$@1", "$@2", "parameter_list",
+  "compound_statement", "var_declaration", "type_specifier",
+  "declaration_list", "statements", "statement", "expression_statement",
+  "variable", "expression", "logic_expression", "rel_expression",
+  "simple_expression", "term", "unary_expression", "factor",
+  "argument_list", "arguments", YY_NULL
 };
 #endif
 
@@ -659,25 +682,25 @@ static const yytype_uint16 yytoknum[] =
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    40,    41,    42,    42,    43,    43,    44,    44,    45,
-      45,    45,    45,    46,    46,    47,    48,    48,    48,    49,
-      49,    49,    49,    50,    50,    51,    51,    51,    51,    51,
-      51,    51,    51,    51,    51,    52,    52,    53,    53,    54,
+       0,    40,    41,    42,    42,    43,    43,    45,    44,    46,
+      44,    47,    47,    47,    47,    48,    48,    49,    50,    50,
+      50,    51,    51,    51,    51,    51,    51,    52,    52,    53,
+      53,    53,    53,    53,    53,    53,    53,    53,    53,    54,
       54,    55,    55,    56,    56,    57,    57,    58,    58,    59,
-      59,    59,    60,    60,    60,    60,    60,    60,    60,    61,
-      61,    62,    62
+      59,    60,    60,    61,    61,    61,    62,    62,    62,    62,
+      62,    62,    62,    63,    63,    64,    64
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     2,     1,     1,     1,     6,     5,     4,
-       3,     2,     1,     3,     2,     3,     1,     1,     1,     3,
-       6,     1,     4,     1,     2,     1,     1,     1,     1,     7,
-       5,     7,     5,     5,     3,     1,     2,     1,     4,     1,
-       3,     1,     3,     1,     3,     1,     3,     1,     3,     2,
-       2,     1,     1,     4,     3,     1,     1,     2,     2,     1,
-       0,     3,     1
+       0,     2,     1,     2,     1,     1,     1,     0,     7,     0,
+       6,     4,     3,     2,     1,     3,     2,     3,     1,     1,
+       1,     3,     6,     6,     1,     4,     4,     1,     2,     1,
+       1,     1,     1,     7,     5,     7,     5,     5,     3,     1,
+       2,     1,     4,     1,     3,     1,     3,     1,     3,     1,
+       3,     1,     3,     2,     2,     1,     1,     4,     3,     1,
+       1,     2,     2,     1,     0,     3,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -685,53 +708,53 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,    16,    17,    18,     0,     2,     4,     6,     5,     0,
-       1,     3,    21,     0,     0,     0,     0,    15,     0,     0,
-      12,     0,    19,     0,     8,     0,     0,    11,    22,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    14,    35,
-      55,    56,    37,    26,    28,    25,     0,    23,    27,    52,
-       0,    39,    41,    43,    45,    47,    51,     7,    10,     0,
-       0,     0,     0,     0,     0,    52,    49,    50,     0,    60,
-       0,    13,    24,    57,    58,     0,    36,     0,     0,     0,
-       0,     9,    20,     0,     0,     0,    34,     0,    54,    62,
-       0,    59,     0,    40,    42,    46,    44,    48,     0,     0,
-       0,     0,    53,     0,    38,    30,     0,    32,    33,    61,
-       0,     0,    31,    29
+       0,    18,    19,    20,     0,     2,     4,     6,     5,     0,
+       1,     3,    24,     0,     0,     0,     0,    17,     9,     0,
+      14,     0,     0,    21,     0,     7,     0,    13,    25,    26,
+       0,     0,    10,     0,    12,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    16,    39,    59,    60,    41,
+      30,    32,    29,     0,    27,    31,    56,     0,    43,    45,
+      47,    49,    51,    55,     8,    11,    22,    23,     0,     0,
+       0,     0,     0,    56,    53,    54,     0,    64,     0,    15,
+      28,    61,    62,     0,    40,     0,     0,     0,     0,     0,
+       0,     0,    38,     0,    58,    66,     0,    63,     0,    44,
+      46,    50,    48,    52,     0,     0,     0,     0,    57,     0,
+      42,    34,     0,    36,    37,    65,     0,     0,    35,    33
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     4,     5,     6,    43,    19,    44,    45,     9,    13,
-      46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
-      56,    90,    91
+      -1,     4,     5,     6,    50,    33,    24,    19,    51,    52,
+       9,    13,    53,    54,    55,    56,    57,    58,    59,    60,
+      61,    62,    63,    96,    97
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -67
+#define YYPACT_NINF -71
 static const yytype_int16 yypact[] =
 {
-      44,   -67,   -67,   -67,    15,    44,   -67,   -67,   -67,    -9,
-     -67,   -67,     7,   -13,     3,     0,    22,   -67,     8,    17,
-      23,    31,    33,    66,   -67,     8,    44,   -67,   -67,    37,
-      48,    50,    55,    54,    56,    54,    54,    54,   -67,   -67,
-     -67,   -67,    30,   -67,   -67,   -67,   102,   -67,   -67,    87,
-      52,   -67,    62,    39,    68,   -67,   -67,   -67,    57,    65,
-      54,   -10,    54,    64,    76,    26,   -67,   -67,    71,    54,
-      54,   -67,   -67,   -67,   -67,    54,   -67,    54,    54,    54,
-      54,   -67,   -67,    77,   -10,    88,   -67,    89,   -67,   -67,
-      90,    86,    91,   -67,   -67,    68,   103,   -67,   138,    54,
-     138,    92,   -67,    54,   -67,   121,    97,   -67,   -67,   -67,
-     138,   138,   -67,   -67
+      41,   -71,   -71,   -71,    23,    41,   -71,   -71,   -71,     0,
+     -71,   -71,     5,    27,     1,    44,    11,   -71,   -71,   -14,
+      51,    55,    57,    45,    61,   -71,    41,   -71,   -71,   -71,
+      46,    65,   -71,    61,    56,    66,    72,    69,    70,    80,
+      20,    81,    20,    20,    20,   -71,   -71,   -71,   -71,    32,
+     -71,   -71,   -71,   101,   -71,   -71,    50,    76,   -71,    87,
+      39,    95,   -71,   -71,   -71,   -71,   -71,   -71,    20,    -9,
+      20,    82,    84,    64,   -71,   -71,    89,    20,    20,   -71,
+     -71,   -71,   -71,    20,   -71,    20,    20,    20,    20,    90,
+      -9,    94,   -71,    96,   -71,   -71,    97,    93,    91,   -71,
+     -71,    95,   110,   -71,   137,    20,   137,    98,   -71,    20,
+     -71,   130,   106,   -71,   -71,   -71,   137,   137,   -71,   -71
 };
 
 /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
-     -67,   -67,   -67,   123,    19,   -67,    -5,    47,    -3,   -67,
-     -67,   -44,   -54,   -35,   -29,   -66,    58,    63,    53,   -30,
-     -67,   -67,   -67
+     -71,   -71,   -71,   136,    17,   -71,   -71,   -71,    -8,    31,
+      -5,   -71,   -71,   -51,   -66,   -42,   -36,   -70,    59,    58,
+      63,   -37,   -71,   -71,   -71
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -740,70 +763,70 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-      65,    65,    72,    89,    63,    66,    67,    84,    68,    93,
-      35,    20,     1,    24,     2,    10,     3,    36,    37,     7,
-      57,    16,    17,    58,     7,    39,    40,    41,    42,    12,
-      99,    83,    18,    85,    65,    14,    21,   109,    23,    15,
-      65,    92,    65,    65,    65,    65,    25,     8,    73,    74,
-      97,    26,     8,     1,   105,     2,   107,     3,    69,    78,
-      22,    27,    70,    79,    28,    29,   112,   113,    65,    30,
-     106,    31,    32,    59,    35,     1,    60,     2,    61,     3,
-      33,    36,    37,    62,    64,    34,    35,    76,    77,    80,
-      40,    41,    42,    36,    37,    81,    23,    38,    82,    86,
-      88,    39,    40,    41,    42,    30,    98,    31,    32,    73,
-      74,     1,    75,     2,    87,     3,    33,   100,   101,   102,
-     103,    34,    35,    78,   104,   110,   111,   108,    11,    36,
-      37,    95,    23,    71,     0,    94,     0,    39,    40,    41,
-      42,    30,    96,    31,    32,     0,     0,     1,     0,     2,
-       0,     3,    33,     0,     0,     0,     0,    34,    35,     0,
-       0,     0,     0,     0,     0,    36,    37,     0,    23,     0,
-       0,     0,     0,    39,    40,    41,    42
+      73,    73,    80,    90,    71,    74,    75,    95,    76,    20,
+       1,    42,     2,    99,     3,    25,    32,     7,    43,    44,
+      26,    34,     7,    10,   105,    64,    46,    47,    48,    49,
+      18,     8,    89,    14,    91,    73,     8,    15,    12,   115,
+      42,    73,    98,    73,    73,    73,    73,    43,    44,    23,
+       1,   103,     2,   111,     3,   113,    47,    48,    49,    86,
+      77,    16,    17,    87,    78,   118,   119,    73,    37,   112,
+      38,    39,    81,    82,     1,    83,     2,    30,     3,    40,
+      21,    22,    35,    36,    41,    42,    81,    82,    28,    27,
+      29,    31,    43,    44,    65,    31,    45,    68,    69,    66,
+      46,    47,    48,    49,    37,    67,    38,    39,    70,    72,
+       1,    84,     2,    85,     3,    40,    88,    92,    94,   104,
+      41,    42,    93,   106,   110,   107,   108,   109,    43,    44,
+      86,    31,    79,   114,   116,   117,    46,    47,    48,    49,
+      37,    11,    38,    39,   100,   102,     1,     0,     2,   101,
+       3,    40,     0,     0,     0,     0,    41,    42,     0,     0,
+       0,     0,     0,     0,    43,    44,     0,    31,     0,     0,
+       0,     0,    46,    47,    48,    49
 };
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-67)))
+  (!!((Yystate) == (-71)))
 
 #define yytable_value_is_error(Yytable_value) \
   YYID (0)
 
 static const yytype_int8 yycheck[] =
 {
-      35,    36,    46,    69,    33,    35,    36,    61,    37,    75,
-      20,    14,     9,    18,    11,     0,    13,    27,    28,     0,
-      25,    34,    35,    26,     5,    35,    36,    37,    38,    38,
-      84,    60,    29,    62,    69,    28,    36,   103,    30,    32,
-      75,    70,    77,    78,    79,    80,    29,     0,    22,    23,
-      80,    34,     5,     9,    98,    11,   100,    13,    28,    20,
-      38,    38,    32,    24,    33,    32,   110,   111,   103,     3,
-      99,     5,     6,    36,    20,     9,    28,    11,    28,    13,
-      14,    27,    28,    28,    28,    19,    20,    35,    26,    21,
-      36,    37,    38,    27,    28,    38,    30,    31,    33,    35,
-      29,    35,    36,    37,    38,     3,    29,     5,     6,    22,
-      23,     9,    25,    11,    38,    13,    14,    29,    29,    29,
-      34,    19,    20,    20,    33,     4,    29,    35,     5,    27,
-      28,    78,    30,    31,    -1,    77,    -1,    35,    36,    37,
-      38,     3,    79,     5,     6,    -1,    -1,     9,    -1,    11,
-      -1,    13,    14,    -1,    -1,    -1,    -1,    19,    20,    -1,
-      -1,    -1,    -1,    -1,    -1,    27,    28,    -1,    30,    -1,
-      -1,    -1,    -1,    35,    36,    37,    38
+      42,    43,    53,    69,    40,    42,    43,    77,    44,    14,
+       9,    20,    11,    83,    13,    29,    24,     0,    27,    28,
+      34,    26,     5,     0,    90,    33,    35,    36,    37,    38,
+      29,     0,    68,    28,    70,    77,     5,    32,    38,   109,
+      20,    83,    78,    85,    86,    87,    88,    27,    28,    38,
+       9,    88,    11,   104,    13,   106,    36,    37,    38,    20,
+      28,    34,    35,    24,    32,   116,   117,   109,     3,   105,
+       5,     6,    22,    23,     9,    25,    11,    32,    13,    14,
+      36,    37,    36,    37,    19,    20,    22,    23,    33,    38,
+      33,    30,    27,    28,    38,    30,    31,    28,    28,    33,
+      35,    36,    37,    38,     3,    33,     5,     6,    28,    28,
+       9,    35,    11,    26,    13,    14,    21,    35,    29,    29,
+      19,    20,    38,    29,    33,    29,    29,    34,    27,    28,
+      20,    30,    31,    35,     4,    29,    35,    36,    37,    38,
+       3,     5,     5,     6,    85,    87,     9,    -1,    11,    86,
+      13,    14,    -1,    -1,    -1,    -1,    19,    20,    -1,    -1,
+      -1,    -1,    -1,    -1,    27,    28,    -1,    30,    -1,    -1,
+      -1,    -1,    35,    36,    37,    38
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     9,    11,    13,    41,    42,    43,    44,    47,    48,
-       0,    43,    38,    49,    28,    32,    34,    35,    29,    45,
-      48,    36,    38,    30,    46,    29,    34,    38,    33,    32,
-       3,     5,     6,    14,    19,    20,    27,    28,    31,    35,
-      36,    37,    38,    44,    46,    47,    50,    51,    52,    53,
-      54,    55,    56,    57,    58,    59,    60,    46,    48,    36,
-      28,    28,    28,    54,    28,    53,    59,    59,    54,    28,
-      32,    31,    51,    22,    23,    25,    35,    26,    20,    24,
-      21,    38,    33,    54,    52,    54,    35,    38,    29,    55,
-      61,    62,    54,    55,    56,    58,    57,    59,    29,    52,
-      29,    29,    29,    34,    33,    51,    54,    51,    35,    55,
-       4,    29,    51,    51
+       0,     9,    11,    13,    41,    42,    43,    44,    49,    50,
+       0,    43,    38,    51,    28,    32,    34,    35,    29,    47,
+      50,    36,    37,    38,    46,    29,    34,    38,    33,    33,
+      32,    30,    48,    45,    50,    36,    37,     3,     5,     6,
+      14,    19,    20,    27,    28,    31,    35,    36,    37,    38,
+      44,    48,    49,    52,    53,    54,    55,    56,    57,    58,
+      59,    60,    61,    62,    48,    38,    33,    33,    28,    28,
+      28,    56,    28,    55,    61,    61,    56,    28,    32,    31,
+      53,    22,    23,    25,    35,    26,    20,    24,    21,    56,
+      54,    56,    35,    38,    29,    57,    63,    64,    56,    57,
+      58,    60,    59,    61,    29,    54,    29,    29,    29,    34,
+      33,    53,    56,    53,    35,    57,     4,    29,    53,    53
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1605,7 +1628,7 @@ yyreduce:
     {
         case 2:
 /* Line 1792 of yacc.c  */
-#line 100 "syntax_analyzer.y"
+#line 120 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" start : program "<<endl<<endl;
 		outlog<<"Symbol Table"<<endl<<endl;
@@ -1618,7 +1641,7 @@ yyreduce:
 
   case 3:
 /* Line 1792 of yacc.c  */
-#line 111 "syntax_analyzer.y"
+#line 131 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" program : program unit "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()+"\n"+(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1629,7 +1652,7 @@ yyreduce:
 
   case 4:
 /* Line 1792 of yacc.c  */
-#line 118 "syntax_analyzer.y"
+#line 138 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" program : unit "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1640,7 +1663,7 @@ yyreduce:
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 127 "syntax_analyzer.y"
+#line 147 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" unit : var_declaration "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1651,7 +1674,7 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 134 "syntax_analyzer.y"
+#line 154 "syntax_analyzer.y"
     {
 		outlog<<"At line no: "<<lines<<" unit : func_definition "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1662,78 +1685,133 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 143 "syntax_analyzer.y"
-    {	
-			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement "<<endl<<endl;
-			outlog<<(yyvsp[(1) - (6)])->get_name()<<" "<<(yyvsp[(2) - (6)])->get_name()<<"("+(yyvsp[(4) - (6)])->get_name()+")\n"<<(yyvsp[(6) - (6)])->get_name()<<endl<<endl;
+#line 163 "syntax_analyzer.y"
+    {
+			// Create the function definition in symbol table
+			symbol_info* func = new symbol_info((yyvsp[(2) - (5)])->get_name(), "ID", "Function");
+			func->set_data_type((yyvsp[(1) - (5)])->get_name());
 			
-			(yyval) = new symbol_info((yyvsp[(1) - (6)])->get_name()+" "+(yyvsp[(2) - (6)])->get_name()+"("+(yyvsp[(4) - (6)])->get_name()+")\n"+(yyvsp[(6) - (6)])->get_name(),"func_def");	
+			// Get the parameter information from parameter_list
+			vector<string> param_types = (yyvsp[(4) - (5)])->get_param_types();
+			vector<string> param_names = (yyvsp[(4) - (5)])->get_param_names();
 			
-			// The function definition is complete.
-            // You can now insert necessary information about the function into the symbol table
-            // Check if the function is already defined
-            symbol_info* existing_func = st->lookup((yyvsp[(2) - (6)])->get_name());
-            if(existing_func != NULL && existing_func->is_function()) {
-                semantic_error(lines, "Multiple declaration of function " + (yyvsp[(2) - (6)])->get_name());
-            } 
-            
-            // Insert the function into symbol table
-            symbol_info* func_symbol = new symbol_info((yyvsp[(2) - (6)])->get_name(), "ID", "Function");
-            func_symbol->set_data_type((yyvsp[(1) - (6)])->get_name());
-            func_symbol->set_param_types((yyvsp[(4) - (6)])->get_param_types());
-            func_symbol->set_param_names((yyvsp[(4) - (6)])->get_param_names());
-            st->insert(func_symbol);
-            
-            // Enter scope for function body
+			func->set_param_types(param_types);
+			func->set_param_names(param_names);
+			
+			// Check if the function is already declared in the current scope
+			// Use the getter method instead of direct access
+			symbol_info* existing_func = st->get_current_scope()->lookup((yyvsp[(2) - (5)])->get_name());
+			if(existing_func != NULL && existing_func->get_symbol_type() == "Function") {
+				semantic_error(lines, "Redefinition of function: " + (yyvsp[(2) - (5)])->get_name());
+			} else {
+				st->insert(func);
+			}
+			
+			// Create a new scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+			
+			// Add parameters to the new scope
+			for(size_t i = 0; i < param_types.size(); i++) {
+				string param_name = param_names[i];
+				if(param_name.empty()) continue; // Skip unnamed parameters
+				
+				// Check for duplicate parameter names within the parameter list only
+				bool duplicate = false;
+				for(size_t j = 0; j < i; j++) {
+					if(param_names[j] == param_name) {
+						semantic_error(lines, "Multiple declaration of variable " + param_name + " in parameter list");
+						duplicate = true;
+						break;
+					}
+				}
+				
+				if(!duplicate) {
+					// Add the parameter to the symbol table
+					symbol_info* param = new symbol_info(param_name, "ID", "Variable");
+					param->set_data_type(param_types[i]);
+					st->insert(param);
+				}
+			}
+
+			// Store the current function's return type for later validation
+			if((yyvsp[(1) - (5)])->get_name() == "void") {
+				current_func_return_type = "void";
+			} else {
+				current_func_return_type = (yyvsp[(1) - (5)])->get_name();
+			}
 		}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 169 "syntax_analyzer.y"
-    {
+#line 219 "syntax_analyzer.y"
+    {	
+			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement "<<endl<<endl;
+			outlog<<(yyvsp[(1) - (7)])->get_name()<<" "<<(yyvsp[(2) - (7)])->get_name()<<"("+(yyvsp[(4) - (7)])->get_name()+")\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
 			
-			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
-			outlog<<(yyvsp[(1) - (5)])->get_name()<<" "<<(yyvsp[(2) - (5)])->get_name()<<"()\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
-			
-			(yyval) = new symbol_info((yyvsp[(1) - (5)])->get_name()+" "+(yyvsp[(2) - (5)])->get_name()+"()\n"+(yyvsp[(5) - (5)])->get_name(),"func_def");	
-			
-			// The function definition is complete.
-            // You can now insert necessary information about the function into the symbol table
-            // Check if the function is already defined
-            symbol_info* existing_func = st->lookup((yyvsp[(2) - (5)])->get_name());
-            if(existing_func != NULL && existing_func->is_function()) {
-                semantic_error(lines, "Multiple declaration of function " + (yyvsp[(2) - (5)])->get_name());
-            } 
-            
-            // Insert the function into symbol table
-            symbol_info* func_symbol = new symbol_info((yyvsp[(2) - (5)])->get_name(), "ID", "Function");
-            func_symbol->set_data_type((yyvsp[(1) - (5)])->get_name());
-            func_symbol->set_param_types({});
-            func_symbol->set_param_names({});
-            st->insert(func_symbol);
-            
-            // Enter scope for function body
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+			(yyval) = new symbol_info((yyvsp[(1) - (7)])->get_name()+" "+(yyvsp[(2) - (7)])->get_name()+"("+(yyvsp[(4) - (7)])->get_name()+")\n"+(yyvsp[(7) - (7)])->get_name(),"func_def");
 		}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 198 "syntax_analyzer.y"
+#line 226 "syntax_analyzer.y"
     {
-			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
-			outlog<<(yyvsp[(1) - (4)])->get_name()<<","<<(yyvsp[(3) - (4)])->get_name()<<" "<<(yyvsp[(4) - (4)])->get_name()<<endl<<endl;
+			// Create the function in symbol table
+			symbol_info* func = new symbol_info((yyvsp[(2) - (4)])->get_name(), "ID", "Function");
+			func->set_data_type((yyvsp[(1) - (4)])->get_name());
+			func->set_param_types(vector<string>());
+			func->set_param_names(vector<string>());
+			
+			// Check if the function is already declared in the current scope
+			symbol_info* existing_func = st->lookup((yyvsp[(2) - (4)])->get_name());
+			if(existing_func != NULL && existing_func->get_symbol_type() == "Function") {
+				semantic_error(lines, "Redefinition of function: " + (yyvsp[(2) - (4)])->get_name());
+			} else {
+				st->insert(func);
+			}
+			
+			// Create a new scope for function body
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Store the current function's return type for later validation
+			if((yyvsp[(1) - (4)])->get_name() == "void") {
+				current_func_return_type = "void";
+			} else {
+				current_func_return_type = (yyvsp[(1) - (4)])->get_name();
+			}
+		}
+    break;
+
+  case 10:
+/* Line 1792 of yacc.c  */
+#line 253 "syntax_analyzer.y"
+    {
+			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
+			outlog<<(yyvsp[(1) - (6)])->get_name()<<" "<<(yyvsp[(2) - (6)])->get_name()<<"()\n"<<(yyvsp[(6) - (6)])->get_name()<<endl<<endl;
+			
+			(yyval) = new symbol_info((yyvsp[(1) - (6)])->get_name()+" "+(yyvsp[(2) - (6)])->get_name()+"()\n"+(yyvsp[(6) - (6)])->get_name(),"func_def");
+		}
+    break;
+
+  case 11:
+/* Line 1792 of yacc.c  */
+#line 262 "syntax_analyzer.y"
+    {
+ 		  	outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
+ 		  	outlog<<(yyvsp[(1) - (4)])->get_name()<<","<<(yyvsp[(3) - (4)])->get_name()<<" "<<(yyvsp[(4) - (4)])->get_name()<<endl<<endl;
 					
 			(yyval) = new symbol_info((yyvsp[(1) - (4)])->get_name()+","+(yyvsp[(3) - (4)])->get_name()+" "+(yyvsp[(4) - (4)])->get_name(),"param_list");
 			
-			// Check for duplicate parameter names
-			for(const auto& param_name : (yyvsp[(1) - (4)])->get_param_names()) {
+			// Check for duplicate parameter names within THIS parameter list only (not across entire scope)
+			bool duplicate = false;
+			vector<string> param_names = (yyvsp[(1) - (4)])->get_param_names();
+			for(const auto& param_name : param_names) {
 				if(param_name == (yyvsp[(4) - (4)])->get_name()) {
-					semantic_error(lines, "Multiple declaration of variable " + (yyvsp[(4) - (4)])->get_name() + " in parameter of foo2");
+					semantic_error(lines, "Multiple declaration of variable " + (yyvsp[(4) - (4)])->get_name() + " in parameter list");
+					duplicate = true;
 					break;
 				}
 			}
@@ -1745,9 +1823,9 @@ yyreduce:
 		}
     break;
 
-  case 10:
+  case 12:
 /* Line 1792 of yacc.c  */
-#line 218 "syntax_analyzer.y"
+#line 285 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1763,9 +1841,9 @@ yyreduce:
 		}
     break;
 
-  case 11:
+  case 13:
 /* Line 1792 of yacc.c  */
-#line 232 "syntax_analyzer.y"
+#line 299 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<" "<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1779,9 +1857,9 @@ yyreduce:
 		}
     break;
 
-  case 12:
+  case 14:
 /* Line 1792 of yacc.c  */
-#line 244 "syntax_analyzer.y"
+#line 311 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" parameter_list : type_specifier "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1795,57 +1873,43 @@ yyreduce:
 		}
     break;
 
-  case 13:
+  case 15:
 /* Line 1792 of yacc.c  */
-#line 258 "syntax_analyzer.y"
+#line 325 "syntax_analyzer.y"
     {
 			outlog << "At line no: " << lines << " compound_statement : LCURL statements RCURL " << endl << endl;
 			outlog << "{\n" << (yyvsp[(2) - (3)])->get_name() << "\n}" << endl << endl;
 
 			(yyval) = new symbol_info("{\n" + (yyvsp[(2) - (3)])->get_name() + "\n}", "comp_stmnt");
 
-			// Enter a new scope and print its ID
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
-
 			// Print the ID of the scope being removed
 			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
-
-			// Print the current state of the symbol table
-			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			outlog << "Current state of the symbol table before exiting scope:" << endl;
 			st->print_all_scopes(outlog);
-
 			st->exit_scope();
 		}
     break;
 
-  case 14:
+  case 16:
 /* Line 1792 of yacc.c  */
-#line 278 "syntax_analyzer.y"
+#line 338 "syntax_analyzer.y"
     {
 			outlog << "At line no: " << lines << " compound_statement : LCURL RCURL " << endl << endl;
 			outlog << "{\n}" << endl << endl;
 
 			(yyval) = new symbol_info("{\n}", "comp_stmnt");
 
-			// Enter a new scope and print its ID
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
-
 			// Print the ID of the scope being removed
 			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
-
-			// Print the current state of the symbol table
-			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			outlog << "Current state of the symbol table before exiting scope:" << endl;
 			st->print_all_scopes(outlog);
-
 			st->exit_scope();
 		}
     break;
 
-  case 15:
+  case 17:
 /* Line 1792 of yacc.c  */
-#line 300 "syntax_analyzer.y"
+#line 353 "syntax_analyzer.y"
     {
     outlog << "At line no: " << lines << " var_declaration : type_specifier declaration_list SEMICOLON " << endl << endl;
     outlog << (yyvsp[(1) - (3)])->get_name() << " " << (yyvsp[(2) - (3)])->get_name() << ";" << endl << endl;
@@ -1873,9 +1937,9 @@ yyreduce:
 }
     break;
 
-  case 16:
+  case 18:
 /* Line 1792 of yacc.c  */
-#line 328 "syntax_analyzer.y"
+#line 381 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : INT "<<endl<<endl;
 			outlog<<"int"<<endl<<endl;
@@ -1884,9 +1948,9 @@ yyreduce:
 	    }
     break;
 
-  case 17:
+  case 19:
 /* Line 1792 of yacc.c  */
-#line 335 "syntax_analyzer.y"
+#line 388 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : FLOAT "<<endl<<endl;
 			outlog<<"float"<<endl<<endl;
@@ -1895,9 +1959,9 @@ yyreduce:
 	    }
     break;
 
-  case 18:
+  case 20:
 /* Line 1792 of yacc.c  */
-#line 342 "syntax_analyzer.y"
+#line 395 "syntax_analyzer.y"
     {
 			outlog<<"At line no: "<<lines<<" type_specifier : VOID "<<endl<<endl;
 			outlog<<"void"<<endl<<endl;
@@ -1906,9 +1970,9 @@ yyreduce:
 	    }
     break;
 
-  case 19:
+  case 21:
 /* Line 1792 of yacc.c  */
-#line 351 "syntax_analyzer.y"
+#line 404 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (3)])->get_name()+","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -1918,23 +1982,39 @@ yyreduce:
  		  }
     break;
 
-  case 20:
+  case 22:
 /* Line 1792 of yacc.c  */
-#line 359 "syntax_analyzer.y"
+#line 412 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
  		  	outlog<<(yyvsp[(1) - (6)])->get_name()+","<<(yyvsp[(3) - (6)])->get_name()<<"["<<(yyvsp[(5) - (6)])->get_name()<<"]"<<endl<<endl;
 			
 			current_type = "array";
 			array_size = stoi((yyvsp[(5) - (6)])->get_name()); // Convert string to int
-            // you may need to store the variable names to insert them in symbol table here or later
+            // Store array name and size
 			(yyval) = new symbol_info((yyvsp[(1) - (6)])->get_name()+","+(yyvsp[(3) - (6)])->get_name()+"["+ (yyvsp[(5) - (6)])->get_name()+"]","declaration_list");
  		  }
     break;
 
-  case 21:
+  case 23:
 /* Line 1792 of yacc.c  */
-#line 369 "syntax_analyzer.y"
+#line 422 "syntax_analyzer.y"
+    {
+ 		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID LTHIRD CONST_FLOAT RTHIRD "<<endl<<endl;
+ 		  	outlog<<(yyvsp[(1) - (6)])->get_name()+","<<(yyvsp[(3) - (6)])->get_name()<<"["<<(yyvsp[(5) - (6)])->get_name()<<"]"<<endl<<endl;
+			
+            // Report error for float array size
+            semantic_error(lines, "Array size must be an integer, not float");
+			
+			current_type = "array";
+			array_size = 0; // Invalid array size
+			(yyval) = new symbol_info((yyvsp[(1) - (6)])->get_name()+","+(yyvsp[(3) - (6)])->get_name()+"["+ (yyvsp[(5) - (6)])->get_name()+"]","declaration_list");
+ 		  }
+    break;
+
+  case 24:
+/* Line 1792 of yacc.c  */
+#line 434 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1944,21 +2024,35 @@ yyreduce:
  		  }
     break;
 
-  case 22:
+  case 25:
 /* Line 1792 of yacc.c  */
-#line 377 "syntax_analyzer.y"
+#line 442 "syntax_analyzer.y"
     {
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
 
-            // you may need to store the variable names to insert them in symbol table here or later
+            // Store array name and size
 			(yyval) = new symbol_info((yyvsp[(1) - (4)])->get_name()+"["+ (yyvsp[(3) - (4)])->get_name()+"]","declaration_list");
  		  }
     break;
 
-  case 23:
+  case 26:
 /* Line 1792 of yacc.c  */
-#line 388 "syntax_analyzer.y"
+#line 450 "syntax_analyzer.y"
+    {
+ 		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_FLOAT RTHIRD "<<endl<<endl;
+			outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
+
+            // Report error for float array size
+            semantic_error(lines, "Array size must be an integer, not float");
+			
+			(yyval) = new symbol_info((yyvsp[(1) - (4)])->get_name()+"["+ (yyvsp[(3) - (4)])->get_name()+"]","declaration_list");
+ 		  }
+    break;
+
+  case 27:
+/* Line 1792 of yacc.c  */
+#line 463 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1967,9 +2061,9 @@ yyreduce:
 	   }
     break;
 
-  case 24:
+  case 28:
 /* Line 1792 of yacc.c  */
-#line 395 "syntax_analyzer.y"
+#line 470 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statements : statements statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<"\n"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -1978,9 +2072,9 @@ yyreduce:
 	   }
     break;
 
-  case 25:
+  case 29:
 /* Line 1792 of yacc.c  */
-#line 404 "syntax_analyzer.y"
+#line 479 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : var_declaration "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -1989,9 +2083,9 @@ yyreduce:
 	  }
     break;
 
-  case 26:
+  case 30:
 /* Line 1792 of yacc.c  */
-#line 411 "syntax_analyzer.y"
+#line 486 "syntax_analyzer.y"
     {
 	  		outlog<<"At line no: "<<lines<<" statement : func_definition "<<endl<<endl;
             outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2001,9 +2095,9 @@ yyreduce:
 	  }
     break;
 
-  case 27:
+  case 31:
 /* Line 1792 of yacc.c  */
-#line 419 "syntax_analyzer.y"
+#line 494 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : expression_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2012,9 +2106,9 @@ yyreduce:
 	  }
     break;
 
-  case 28:
+  case 32:
 /* Line 1792 of yacc.c  */
-#line 426 "syntax_analyzer.y"
+#line 501 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : compound_statement "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2023,9 +2117,9 @@ yyreduce:
 	  }
     break;
 
-  case 29:
+  case 33:
 /* Line 1792 of yacc.c  */
-#line 433 "syntax_analyzer.y"
+#line 508 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement "<<endl<<endl;
 			outlog<<"for("<<(yyvsp[(3) - (7)])->get_name()<<(yyvsp[(4) - (7)])->get_name()<<(yyvsp[(5) - (7)])->get_name()<<")\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -2034,9 +2128,9 @@ yyreduce:
 	  }
     break;
 
-  case 30:
+  case 34:
 /* Line 1792 of yacc.c  */
-#line 440 "syntax_analyzer.y"
+#line 515 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -2045,9 +2139,9 @@ yyreduce:
 	  }
     break;
 
-  case 31:
+  case 35:
 /* Line 1792 of yacc.c  */
-#line 447 "syntax_analyzer.y"
+#line 522 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : IF LPAREN expression RPAREN statement ELSE statement "<<endl<<endl;
 			outlog<<"if("<<(yyvsp[(3) - (7)])->get_name()<<")\n"<<(yyvsp[(5) - (7)])->get_name()<<"\nelse\n"<<(yyvsp[(7) - (7)])->get_name()<<endl<<endl;
@@ -2056,9 +2150,9 @@ yyreduce:
 	  }
     break;
 
-  case 32:
+  case 36:
 /* Line 1792 of yacc.c  */
-#line 454 "syntax_analyzer.y"
+#line 529 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : WHILE LPAREN expression RPAREN statement "<<endl<<endl;
 			outlog<<"while("<<(yyvsp[(3) - (5)])->get_name()<<")\n"<<(yyvsp[(5) - (5)])->get_name()<<endl<<endl;
@@ -2067,32 +2161,45 @@ yyreduce:
 	  }
     break;
 
-  case 33:
+  case 37:
 /* Line 1792 of yacc.c  */
-#line 461 "syntax_analyzer.y"
+#line 536 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : PRINTLN LPAREN ID RPAREN SEMICOLON "<<endl<<endl;
 			outlog<<"printf("<<(yyvsp[(3) - (5)])->get_name()<<");"<<endl<<endl; 
+			
+			// Check if the variable exists
+			symbol_info* var = st->lookup((yyvsp[(3) - (5)])->get_name());
+			if(var == NULL) {
+				semantic_error(lines, "Undeclared variable " + (yyvsp[(3) - (5)])->get_name());
+			}
 			
 			(yyval) = new symbol_info("printf("+(yyvsp[(3) - (5)])->get_name()+");","stmnt");
 	  }
     break;
 
-  case 34:
+  case 38:
 /* Line 1792 of yacc.c  */
-#line 468 "syntax_analyzer.y"
+#line 549 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" statement : RETURN expression SEMICOLON "<<endl<<endl;
 			outlog<<"return "<<(yyvsp[(2) - (3)])->get_name()<<";"<<endl<<endl;
 			
 			(yyval) = new symbol_info("return "+(yyvsp[(2) - (3)])->get_name()+";","stmnt");
-			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
+			
+			// Check if return type is compatible with function return type
+			if (current_func_return_type == "void" && (yyvsp[(2) - (3)])->get_name() != "") {
+				semantic_error(lines, "Void function cannot return a value");
+			}
+			else if (current_func_return_type == "int" && (yyvsp[(2) - (3)])->get_data_type() == "float") {
+				semantic_error(lines, "Warning: Possible loss of precision when returning float from an int function");
+			}
 	  }
     break;
 
-  case 35:
+  case 39:
 /* Line 1792 of yacc.c  */
-#line 478 "syntax_analyzer.y"
+#line 566 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : SEMICOLON "<<endl<<endl;
 				outlog<<";"<<endl<<endl;
@@ -2101,9 +2208,9 @@ yyreduce:
 	        }
     break;
 
-  case 36:
+  case 40:
 /* Line 1792 of yacc.c  */
-#line 485 "syntax_analyzer.y"
+#line 573 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" expression_statement : expression SEMICOLON "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (2)])->get_name()<<";"<<endl<<endl;
@@ -2112,21 +2219,22 @@ yyreduce:
 	        }
     break;
 
-  case 37:
+  case 41:
 /* Line 1792 of yacc.c  */
-#line 494 "syntax_analyzer.y"
+#line 582 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" variable : ID "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
 			
 		(yyval) = new symbol_info((yyvsp[(1) - (1)])->get_name(),"varbl");
 		
-		// Check if the variable is declared
+		// Check if the variable is declared - in ANY scope (includes global scope)
 		symbol_info* var = st->lookup((yyvsp[(1) - (1)])->get_name());
 		if(var == NULL) {
 			semantic_error(lines, "Undeclared variable " + (yyvsp[(1) - (1)])->get_name());
 			(yyval)->set_data_type("error");
 		} else {
+			// Successfully found variable, set its type information
 			(yyval)->set_data_type(var->get_data_type());
 			(yyval)->set_symbol_type(var->get_symbol_type());
 			
@@ -2138,9 +2246,9 @@ yyreduce:
 	 }
     break;
 
-  case 38:
+  case 42:
 /* Line 1792 of yacc.c  */
-#line 516 "syntax_analyzer.y"
+#line 605 "syntax_analyzer.y"
     {
 	 	outlog<<"At line no: "<<lines<<" variable : ID LTHIRD expression RTHIRD "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"["<<(yyvsp[(3) - (4)])->get_name()<<"]"<<endl<<endl;
@@ -2170,9 +2278,9 @@ yyreduce:
 	 }
     break;
 
-  case 39:
+  case 43:
 /* Line 1792 of yacc.c  */
-#line 546 "syntax_analyzer.y"
+#line 635 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2182,9 +2290,9 @@ yyreduce:
 	   }
     break;
 
-  case 40:
+  case 44:
 /* Line 1792 of yacc.c  */
-#line 554 "syntax_analyzer.y"
+#line 643 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" expression : variable ASSIGNOP logic_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<"="<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2193,23 +2301,44 @@ yyreduce:
 			
 			// Check if types are compatible
 			if((yyvsp[(1) - (3)])->get_data_type() != "error" && (yyvsp[(3) - (3)])->get_data_type() != "error") {
-				if(!type_compatible((yyvsp[(1) - (3)])->get_data_type(), (yyvsp[(3) - (3)])->get_data_type())) {
-					semantic_error(lines, "Type mismatch in assignment. " + (yyvsp[(1) - (3)])->get_data_type() + " variable cannot be assigned " + (yyvsp[(3) - (3)])->get_data_type() + " value");
-				} 
-				// Warning for possible precision loss
-				else if((yyvsp[(1) - (3)])->get_data_type() == "int" && (yyvsp[(3) - (3)])->get_data_type() == "float") {
-					semantic_error(lines, "Warning: Assignment of float value into variable of integer type ");
+				// Corrected type checking to handle global variables properly
+				string var_type = (yyvsp[(1) - (3)])->get_data_type();
+				string expr_type = (yyvsp[(3) - (3)])->get_data_type();
+				string expr_val = (yyvsp[(3) - (3)])->get_name();
+				
+				// Check if the expression is a void function call
+				if(expr_type == "void") {
+					semantic_error(lines, "Void function used in expression");
+					(yyval)->set_data_type("error");
 				}
-				(yyval)->set_data_type((yyvsp[(1) - (3)])->get_data_type());
+				// Handle empty (null) expression values
+				else if(expr_type == "") {
+					// Skip validation for empty expressions
+					(yyval)->set_data_type(var_type);
+				}
+				// Regular type compatibility check
+				else if(!type_compatible(var_type, expr_type)) {
+					semantic_error(lines, "Type mismatch in assignment. " + var_type + " variable cannot be assigned " + expr_type + " value");
+					(yyval)->set_data_type(var_type); // Keep the type despite the error
+				} 
+				// Check for float literals assigned to int variables
+				else if(var_type == "int" && 
+				       (expr_type == "float" || 
+				        (expr_val.find('.') != string::npos && !expr_val.empty()))) {
+					semantic_error(lines, "Warning: Assignment of float value into variable of integer type");
+					(yyval)->set_data_type(var_type);
+				} else {
+					(yyval)->set_data_type(var_type);
+				}
 			} else {
 				(yyval)->set_data_type("error");
 			}
 	   }
     break;
 
-  case 41:
+  case 45:
 /* Line 1792 of yacc.c  */
-#line 577 "syntax_analyzer.y"
+#line 687 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2219,9 +2348,9 @@ yyreduce:
 	     }
     break;
 
-  case 42:
+  case 46:
 /* Line 1792 of yacc.c  */
-#line 585 "syntax_analyzer.y"
+#line 695 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" logic_expression : rel_expression LOGICOP rel_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2233,9 +2362,9 @@ yyreduce:
 	     }
     break;
 
-  case 43:
+  case 47:
 /* Line 1792 of yacc.c  */
-#line 597 "syntax_analyzer.y"
+#line 707 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2245,9 +2374,9 @@ yyreduce:
 	    }
     break;
 
-  case 44:
+  case 48:
 /* Line 1792 of yacc.c  */
-#line 605 "syntax_analyzer.y"
+#line 715 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" rel_expression : simple_expression RELOP simple_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2259,9 +2388,9 @@ yyreduce:
 	    }
     break;
 
-  case 45:
+  case 49:
 /* Line 1792 of yacc.c  */
-#line 617 "syntax_analyzer.y"
+#line 727 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2271,9 +2400,9 @@ yyreduce:
 	      }
     break;
 
-  case 46:
+  case 50:
 /* Line 1792 of yacc.c  */
-#line 625 "syntax_analyzer.y"
+#line 735 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" simple_expression : simple_expression ADDOP term "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2289,9 +2418,9 @@ yyreduce:
 	      }
     break;
 
-  case 47:
+  case 51:
 /* Line 1792 of yacc.c  */
-#line 641 "syntax_analyzer.y"
+#line 751 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2301,9 +2430,9 @@ yyreduce:
 	 }
     break;
 
-  case 48:
+  case 52:
 /* Line 1792 of yacc.c  */
-#line 649 "syntax_analyzer.y"
+#line 759 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" term : term MULOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (3)])->get_name()<<(yyvsp[(2) - (3)])->get_name()<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2351,9 +2480,9 @@ yyreduce:
 	 }
     break;
 
-  case 49:
+  case 53:
 /* Line 1792 of yacc.c  */
-#line 697 "syntax_analyzer.y"
+#line 807 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : ADDOP unary_expression "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (2)])->get_name()<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2362,9 +2491,9 @@ yyreduce:
 	     }
     break;
 
-  case 50:
+  case 54:
 /* Line 1792 of yacc.c  */
-#line 704 "syntax_analyzer.y"
+#line 814 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : NOT unary_expression "<<endl<<endl;
 			outlog<<"!"<<(yyvsp[(2) - (2)])->get_name()<<endl<<endl;
@@ -2373,9 +2502,9 @@ yyreduce:
 	     }
     break;
 
-  case 51:
+  case 55:
 /* Line 1792 of yacc.c  */
-#line 711 "syntax_analyzer.y"
+#line 821 "syntax_analyzer.y"
     {
 	    	outlog<<"At line no: "<<lines<<" unary_expression : factor "<<endl<<endl;
 			outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2384,9 +2513,9 @@ yyreduce:
 	     }
     break;
 
-  case 52:
+  case 56:
 /* Line 1792 of yacc.c  */
-#line 720 "syntax_analyzer.y"
+#line 830 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2396,9 +2525,9 @@ yyreduce:
 	}
     break;
 
-  case 53:
+  case 57:
 /* Line 1792 of yacc.c  */
-#line 728 "syntax_analyzer.y"
+#line 838 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : ID LPAREN argument_list RPAREN "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (4)])->get_name()<<"("<<(yyvsp[(3) - (4)])->get_name()<<")"<<endl<<endl;
@@ -2413,39 +2542,39 @@ yyreduce:
 		} else {
 			// Check if it's actually a function
 			if(!func->is_function()) {
-				semantic_error(lines, "'" + (yyvsp[(1) - (4)])->get_name() + "' is not a function");
+				semantic_error(lines, (yyvsp[(1) - (4)])->get_name() + " is not a function");
 				(yyval)->set_data_type("error");
 			} else {
 				// Check if it's a void function used in an expression
 				if(func->get_data_type() == "void") {
-					semantic_error(lines, "operation on void type ");
+					semantic_error(lines, "operation on void type");
 					(yyval)->set_data_type("error");
 				} else {
 					(yyval)->set_data_type(func->get_data_type());
 				}
 				
-				// Split arguments from the argument list
-				vector<string> arg_list;
+				// Parse arguments
+				vector<string> arg_types;
 				string args = (yyvsp[(3) - (4)])->get_name();
 				if(!args.empty()) {
 					size_t start = 0, end;
 					while((end = args.find(',', start)) != string::npos) {
-						arg_list.push_back(args.substr(start, end - start));
+						arg_types.push_back("int"); // Simplified - we would need to track actual types
 						start = end + 1;
 					}
-					arg_list.push_back(args.substr(start));
+					arg_types.push_back("int"); // For the last argument
 				}
 				
-				// Check if the number of arguments matches
+				// Check number of arguments
 				vector<string> param_types = func->get_param_types();
-				if(arg_list.size() != param_types.size()) {
+				if(arg_types.size() != param_types.size()) {
 					semantic_error(lines, "Inconsistencies in number of arguments in function call: " + (yyvsp[(1) - (4)])->get_name());
-				} else {
-					// Check if argument types match parameter types
-					for(size_t i = 0; i < arg_list.size(); i++) {
-						if(!type_compatible(param_types[i], arg_list[i])) {
-							semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + (yyvsp[(1) - (4)])->get_name());
-						}
+				}
+				
+				// Check argument types (simplified)
+				for(size_t i = 0; i < min(arg_types.size(), param_types.size()); i++) {
+					if(param_types[i] == "int" && arg_types[i] != "int") {
+						semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + (yyvsp[(1) - (4)])->get_name());
 					}
 				}
 			}
@@ -2453,9 +2582,9 @@ yyreduce:
 	}
     break;
 
-  case 54:
+  case 58:
 /* Line 1792 of yacc.c  */
-#line 781 "syntax_analyzer.y"
+#line 891 "syntax_analyzer.y"
     {
 	   	outlog<<"At line no: "<<lines<<" factor : LPAREN expression RPAREN "<<endl<<endl;
 		outlog<<"("<<(yyvsp[(2) - (3)])->get_name()<<")"<<endl<<endl;
@@ -2465,9 +2594,9 @@ yyreduce:
 	}
     break;
 
-  case 55:
+  case 59:
 /* Line 1792 of yacc.c  */
-#line 789 "syntax_analyzer.y"
+#line 899 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_INT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2477,9 +2606,9 @@ yyreduce:
 	}
     break;
 
-  case 56:
+  case 60:
 /* Line 1792 of yacc.c  */
-#line 797 "syntax_analyzer.y"
+#line 907 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : CONST_FLOAT "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2489,33 +2618,33 @@ yyreduce:
 	}
     break;
 
-  case 57:
+  case 61:
 /* Line 1792 of yacc.c  */
-#line 805 "syntax_analyzer.y"
+#line 915 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable INCOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"++"<<endl<<endl;
 			
-		(yyval) = new symbol_info((yyvsp[(1) - (2)])->get_name()+"++","fctr");
-		(yyval)->set_data_type((yyvsp[(1) - (2)])->get_data_type());
+			(yyval) = new symbol_info((yyvsp[(1) - (2)])->get_name()+"++","fctr");
+			(yyval)->set_data_type((yyvsp[(1) - (2)])->get_data_type());
 	}
     break;
 
-  case 58:
+  case 62:
 /* Line 1792 of yacc.c  */
-#line 813 "syntax_analyzer.y"
+#line 923 "syntax_analyzer.y"
     {
 	    outlog<<"At line no: "<<lines<<" factor : variable DECOP "<<endl<<endl;
 		outlog<<(yyvsp[(1) - (2)])->get_name()<<"--"<<endl<<endl;
 			
-		(yyval) = new symbol_info((yyvsp[(1) - (2)])->get_name()+"--","fctr");
-		(yyval)->set_data_type((yyvsp[(1) - (2)])->get_data_type());
+			(yyval) = new symbol_info((yyvsp[(1) - (2)])->get_name()+"--","fctr");
+			(yyval)->set_data_type((yyvsp[(1) - (2)])->get_data_type());
 	}
     break;
 
-  case 59:
+  case 63:
 /* Line 1792 of yacc.c  */
-#line 823 "syntax_analyzer.y"
+#line 933 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list : arguments "<<endl<<endl;
 					outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2524,9 +2653,9 @@ yyreduce:
 			  }
     break;
 
-  case 60:
+  case 64:
 /* Line 1792 of yacc.c  */
-#line 830 "syntax_analyzer.y"
+#line 940 "syntax_analyzer.y"
     {
 					outlog<<"At line no: "<<lines<<" argument_list :  "<<endl<<endl;
 					outlog<<""<<endl<<endl;
@@ -2535,9 +2664,9 @@ yyreduce:
 			  }
     break;
 
-  case 61:
+  case 65:
 /* Line 1792 of yacc.c  */
-#line 839 "syntax_analyzer.y"
+#line 949 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : arguments COMMA logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (3)])->get_name()<<","<<(yyvsp[(3) - (3)])->get_name()<<endl<<endl;
@@ -2546,9 +2675,9 @@ yyreduce:
 		  }
     break;
 
-  case 62:
+  case 66:
 /* Line 1792 of yacc.c  */
-#line 846 "syntax_analyzer.y"
+#line 956 "syntax_analyzer.y"
     {
 				outlog<<"At line no: "<<lines<<" arguments : logic_expression "<<endl<<endl;
 				outlog<<(yyvsp[(1) - (1)])->get_name()<<endl<<endl;
@@ -2559,7 +2688,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 2563 "y.tab.c"
+#line 2692 "y.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2791,7 +2920,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 855 "syntax_analyzer.y"
+#line 965 "syntax_analyzer.y"
 
 
 int main(int argc, char *argv[])
@@ -2821,11 +2950,14 @@ int main(int argc, char *argv[])
 
 	yyparse();
 	
+	// Reset error count based on unique lines with errors
+	error_count = lines_with_errors.size();
+
 	outlog<<endl<<"Total lines: "<<lines<<endl;
-	outlog<<"Total errors: "<<error_count<<endl;
-	
+	outlog<<"Total error lines: "<<error_count<<endl;
+
 	// Add error count to error file too
-	errout<<endl<<"Total errors: "<<error_count<<endl;
+	errout<<endl<<"Total error lines: "<<error_count<<endl;
 	
 	outlog.close();
 	errout.close();

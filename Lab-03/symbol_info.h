@@ -18,11 +18,12 @@ private:
     int array_size;
 
 public:
-    symbol_info(string name, string type, string symbol_type = "", vector<string> parameter_types = vector<string>(), vector<string> parameter_names = vector<string>())
+    symbol_info(string name, string type, string symbol_type = "", string data_type = "", vector<string> parameter_types = vector<string>(), vector<string> parameter_names = vector<string>())
     {
         this->name = name;
         this->type = type;
         this->symbol_type = symbol_type;
+        this->data_type = data_type;
         this->array_size = 0;
         this->parameter_types = parameter_types;
         this->parameter_names = parameter_names;

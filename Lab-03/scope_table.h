@@ -51,6 +51,7 @@ scope_table::scope_table(scope_table *parent_scope, int bucket_count, int unique
     this->bucket_count = bucket_count;
     this->unique_id = unique_id;
     this->parent_scope = parent_scope;
+    this->scope_id = unique_id; 
     table.resize(bucket_count);
 }
 

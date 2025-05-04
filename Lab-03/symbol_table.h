@@ -24,6 +24,9 @@ public:
     bool delete_symbol(symbol_info* symbol);
     bool delete_symbol(string name);
     int get_current_scope_id();
+    
+    // Add getter for current_scope
+    scope_table* get_current_scope() { return current_scope; }
 };
 
 // complete the methods of symbol_table class

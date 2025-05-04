@@ -1,4 +1,4 @@
-Entered new scope with ID: 1176530273
+Entered new scope with ID: 2
 At line no: 1 type_specifier : INT 
 
 int
@@ -68,6 +68,7 @@ At line no: 3 parameter_list : parameter_list COMMA type_specifier ID
 
 int c,int d
 
+Entered new scope with ID: 3
 At line no: 4 factor : CONST_INT 
 
 7
@@ -100,7 +101,6 @@ At line no: 4 statement : RETURN expression SEMICOLON
 
 return 7;
 
-Exiting scope with ID: 1176530273
 At line no: 4 statements : statement 
 
 return 7;
@@ -111,18 +111,20 @@ At line no: 5 compound_statement : LCURL statements RCURL
 return 7;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 3
+Current state of the symbol table before exiting scope:
 ################################
 
 ScopeTable # 3
+Index 0 : < d, int, Variable > 
+Index 9 : < c, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
 Index 7 : < a, float, Variable > 
+Index 8 : < func, int, Function > 
 --------------------------------
 ScopeTable # 1
 --------------------------------
@@ -135,7 +137,6 @@ int func(int c,int d)
 return 7;
 }
 
-Entered new scope with ID: 1892616
 At line no: 5 unit : func_definition 
 
 int func(int c,int d)
@@ -172,6 +173,7 @@ At line no: 7 parameter_list : parameter_list COMMA type_specifier ID
 
 int a,float b
 
+Entered new scope with ID: 4
 At line no: 8 variable : ID 
 
 a
@@ -224,7 +226,6 @@ At line no: 8 statement : RETURN expression SEMICOLON
 
 return a+3;
 
-Exiting scope with ID: 1892616
 At line no: 8 statements : statement 
 
 return a+3;
@@ -235,19 +236,19 @@ At line no: 9 compound_statement : LCURL statements RCURL
 return a+3;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 4
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 5
---------------------------------
 ScopeTable # 4
+Index 7 : < a, int, Variable > 
+Index 8 : < b, float, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
 --------------------------------
@@ -262,7 +263,6 @@ int correct_foo(int a,float b)
 return a+3;
 }
 
-Entered new scope with ID: 0
 At line no: 9 unit : func_definition 
 
 int correct_foo(int a,float b)
@@ -295,6 +295,7 @@ At line no: 12 parameter_list : type_specifier ID
 
 int a
 
+Entered new scope with ID: 5
 At line no: 13 variable : ID 
 
 y
@@ -327,7 +328,6 @@ At line no: 13 expression : variable ASSIGNOP logic_expression
 
 y=6
 
-Error at line 13: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 13 expression_statement : expression SEMICOLON 
 
 y=6;
@@ -346,22 +346,19 @@ At line no: 14 compound_statement : LCURL statements RCURL
 y=6;
 }
 
-Entered new scope with ID: 993209185
-Exiting scope with ID: 993209185
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 5
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 7
---------------------------------
-ScopeTable # 6
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+ScopeTable # 5
+Index 7 : < a, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
 --------------------------------
@@ -376,7 +373,6 @@ void foo(int a)
 y=6;
 }
 
-Entered new scope with ID: 993209185
 At line no: 14 unit : func_definition 
 
 void foo(int a)
@@ -421,7 +417,7 @@ At line no: 16 parameter_list : parameter_list COMMA type_specifier ID
 
 int a,int a
 
-Error at line 16: Multiple declaration of variable a in parameter of foo2
+Error at line no: 16 : Multiple declaration of variable a in parameter list
 At line no: 16 type_specifier : FLOAT 
 
 float
@@ -430,6 +426,8 @@ At line no: 16 parameter_list : parameter_list COMMA type_specifier ID
 
 int a,int a,float b
 
+Entered new scope with ID: 6
+Error at line no: 16 : Multiple declaration of variable a in parameter list
 At line no: 17 variable : ID 
 
 a
@@ -482,7 +480,6 @@ At line no: 17 statement : RETURN expression SEMICOLON
 
 return a+2;
 
-Exiting scope with ID: 993209185
 At line no: 17 statements : statement 
 
 return a+2;
@@ -493,25 +490,20 @@ At line no: 18 compound_statement : LCURL statements RCURL
 return a+2;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 6
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 9
---------------------------------
-ScopeTable # 8
---------------------------------
 ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+Index 7 : < a, int, Variable > 
+Index 8 : < b, float, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
 --------------------------------
@@ -526,7 +518,6 @@ int foo2(int a,int a,float b)
 return a+2;
 }
 
-Entered new scope with ID: 171651627
 At line no: 18 unit : func_definition 
 
 int foo2(int a,int a,float b)
@@ -575,6 +566,7 @@ At line no: 20 parameter_list : parameter_list COMMA type_specifier ID
 
 int a,int b
 
+Entered new scope with ID: 7
 At line no: 21 variable : ID 
 
 y
@@ -607,7 +599,6 @@ At line no: 21 expression : variable ASSIGNOP logic_expression
 
 y=7
 
-Error at line 21: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 21 expression_statement : expression SEMICOLON 
 
 y=7;
@@ -626,28 +617,21 @@ At line no: 22 compound_statement : LCURL statements RCURL
 y=7;
 }
 
-Entered new scope with ID: 171651627
-Exiting scope with ID: 171651627
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 7
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 11
---------------------------------
-ScopeTable # 10
---------------------------------
-ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+ScopeTable # 7
+Index 7 : < a, int, Variable > 
+Index 8 : < b, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
 --------------------------------
@@ -662,7 +646,6 @@ void foo3(int a,int b)
 y=7;
 }
 
-Entered new scope with ID: 0
 At line no: 22 unit : func_definition 
 
 void foo3(int a,int b)
@@ -707,11 +690,11 @@ At line no: 24 parameter_list : type_specifier ID
 
 int d
 
+Entered new scope with ID: 8
 At line no: 25 variable : ID 
 
 d
 
-Error at line 25: Undeclared variable d
 At line no: 25 factor : variable 
 
 d
@@ -744,7 +727,6 @@ At line no: 25 statement : RETURN expression SEMICOLON
 
 return d;
 
-Exiting scope with ID: 0
 At line no: 25 statements : statement 
 
 return d;
@@ -755,31 +737,20 @@ At line no: 26 compound_statement : LCURL statements RCURL
 return d;
 }
 
-Entered new scope with ID: 1
-Exiting scope with ID: 1
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 8
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 13
---------------------------------
-ScopeTable # 12
---------------------------------
-ScopeTable # 10
-Index 5 : < foo3, void, Function > 
---------------------------------
 ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+Index 0 : < d, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
 --------------------------------
@@ -794,7 +765,6 @@ int z(int d)
 return d;
 }
 
-Entered new scope with ID: 1
 At line no: 26 unit : func_definition 
 
 int z(int d)
@@ -843,6 +813,7 @@ At line no: 28 parameter_list : type_specifier ID
 
 int a
 
+Entered new scope with ID: 9
 At line no: 29 variable : ID 
 
 a
@@ -879,7 +850,6 @@ At line no: 29 statement : RETURN expression SEMICOLON
 
 return a;
 
-Exiting scope with ID: 1
 At line no: 29 statements : statement 
 
 return a;
@@ -890,36 +860,23 @@ At line no: 30 compound_statement : LCURL statements RCURL
 return a;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 9
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 15
---------------------------------
-ScopeTable # 14
---------------------------------
-ScopeTable # 12
-Index 2 : < z, int, Function > 
---------------------------------
-ScopeTable # 10
-Index 5 : < foo3, void, Function > 
---------------------------------
-ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+ScopeTable # 9
+Index 7 : < a, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
+Index 9 : < var, int, Function > 
 --------------------------------
 ScopeTable # 1
 --------------------------------
@@ -932,7 +889,6 @@ int var(int a)
 return a;
 }
 
-Entered new scope with ID: 0
 At line no: 30 unit : func_definition 
 
 int var(int a)
@@ -985,6 +941,7 @@ At line no: 32 parameter_list : type_specifier ID
 
 int a
 
+Entered new scope with ID: 10
 At line no: 33 variable : ID 
 
 a
@@ -1037,7 +994,7 @@ At line no: 33 statement : RETURN expression SEMICOLON
 
 return a+3;
 
-Exiting scope with ID: 0
+Error at line no: 33 : Void function cannot return a value
 At line no: 33 statements : statement 
 
 return a+3;
@@ -1048,39 +1005,24 @@ At line no: 34 compound_statement : LCURL statements RCURL
 return a+3;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 10
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 17
---------------------------------
-ScopeTable # 16
---------------------------------
-ScopeTable # 14
-Index 9 : < var, int, Function > 
---------------------------------
-ScopeTable # 12
-Index 2 : < z, int, Function > 
---------------------------------
 ScopeTable # 10
-Index 5 : < foo3, void, Function > 
---------------------------------
-ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
+Index 7 : < a, int, Variable > 
 --------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
 Index 1 : < y, int, Variable > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
+Index 6 : < foo4, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
+Index 9 : < var, int, Function > 
 --------------------------------
 ScopeTable # 1
 --------------------------------
@@ -1093,7 +1035,6 @@ void foo4(int a)
 return a+3;
 }
 
-Entered new scope with ID: 0
 At line no: 34 unit : func_definition 
 
 void foo4(int a)
@@ -1142,6 +1083,7 @@ At line no: 36 type_specifier : INT
 
 int
 
+Entered new scope with ID: 11
 At line no: 37 type_specifier : INT 
 
 int
@@ -1170,6 +1112,7 @@ At line no: 37 var_declaration : type_specifier declaration_list SEMICOLON
 
 int a,b,c[4],dd,ee;
 
+Error at line no: 37 : Multiple declaration of variable a
 At line no: 37 statement : var_declaration 
 
 int a,b,c[4],dd,ee;
@@ -1190,7 +1133,7 @@ At line no: 38 var_declaration : type_specifier declaration_list SEMICOLON
 
 void e;
 
-Error at line 38: variable type can not be void
+Error at line no: 38 : variable type can not be void
 At line no: 38 statement : var_declaration 
 
 void e;
@@ -1216,6 +1159,8 @@ At line no: 39 var_declaration : type_specifier declaration_list SEMICOLON
 
 float a,c[7];
 
+Error at line no: 39 : Multiple declaration of variable a
+Error at line no: 39 : Multiple declaration of variable c
 At line no: 39 statement : var_declaration 
 
 float a,c[7];
@@ -1290,8 +1235,6 @@ At line no: 41 factor : ID LPAREN argument_list RPAREN
 
 func(2.5,3.5)
 
-Error at line 41: argument 1 type mismatch in function call: func
-Error at line 41: argument 2 type mismatch in function call: func
 At line no: 41 unary_expression : factor 
 
 func(2.5,3.5)
@@ -1371,7 +1314,7 @@ At line no: 44 variable : ID
 
 c
 
-Error at line 44: variable is of array type : c
+Error at line no: 44 : variable is of array type : c
 At line no: 44 factor : variable 
 
 c
@@ -1408,8 +1351,6 @@ At line no: 44 factor : ID LPAREN argument_list RPAREN
 
 correct_foo(a,c)
 
-Error at line 44: argument 1 type mismatch in function call: correct_foo
-Error at line 44: argument 2 type mismatch in function call: correct_foo
 At line no: 44 unary_expression : factor 
 
 correct_foo(a,c)
@@ -1434,7 +1375,6 @@ At line no: 44 expression : variable ASSIGNOP logic_expression
 
 a=correct_foo(a,c)
 
-Error at line 44: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 44 expression_statement : expression SEMICOLON 
 
 a=correct_foo(a,c);
@@ -1495,7 +1435,7 @@ At line no: 45 factor : ID LPAREN argument_list RPAREN
 
 correct_foo(a)
 
-Error at line 45: Inconsistencies in number of arguments in function call: correct_foo
+Error at line no: 45 : Inconsistencies in number of arguments in function call: correct_foo
 At line no: 45 unary_expression : factor 
 
 correct_foo(a)
@@ -1520,7 +1460,6 @@ At line no: 45 expression : variable ASSIGNOP logic_expression
 
 b=correct_foo(a)
 
-Error at line 45: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 45 expression_statement : expression SEMICOLON 
 
 b=correct_foo(a);
@@ -1542,7 +1481,7 @@ At line no: 47 variable : ID
 
 k
 
-Error at line 47: Undeclared variable k
+Error at line no: 47 : Undeclared variable k
 At line no: 47 factor : CONST_INT 
 
 5
@@ -1637,7 +1576,7 @@ At line no: 48 variable : ID LTHIRD expression RTHIRD
 
 b[5]
 
-Error at line 48: variable is not of array type : b
+Error at line no: 48 : variable is not of array type : b
 At line no: 48 factor : CONST_INT 
 
 7
@@ -1666,7 +1605,6 @@ At line no: 48 expression : variable ASSIGNOP logic_expression
 
 b[5]=7
 
-Error at line 48: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 48 expression_statement : expression SEMICOLON 
 
 b[5]=7;
@@ -1718,7 +1656,7 @@ At line no: 49 variable : ID LTHIRD expression RTHIRD
 
 c[2.5]
 
-Error at line 49: array index is not of integer type : c
+Error at line no: 49 : array index is not of integer type : c
 At line no: 49 factor : CONST_INT 
 
 8
@@ -1747,7 +1685,6 @@ At line no: 49 expression : variable ASSIGNOP logic_expression
 
 c[2.5]=8
 
-Error at line 49: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 49 expression_statement : expression SEMICOLON 
 
 c[2.5]=8;
@@ -1800,7 +1737,7 @@ At line no: 50 variable : ID LTHIRD expression RTHIRD
 
 c[0]
 
-Error at line 50: array index is not of integer type : c
+Error at line no: 50 : array index is not of integer type : c
 At line no: 50 factor : CONST_INT 
 
 2
@@ -1865,8 +1802,7 @@ At line no: 50 factor : ID LPAREN argument_list RPAREN
 
 foo4(7)
 
-Error at line 50: operation on void type 
-Error at line 50: argument 1 type mismatch in function call: foo4
+Error at line no: 50 : operation on void type
 At line no: 50 unary_expression : factor 
 
 foo4(7)
@@ -1944,7 +1880,7 @@ At line no: 51 variable : ID LTHIRD expression RTHIRD
 
 c[1]
 
-Error at line 51: array index is not of integer type : c
+Error at line no: 51 : array index is not of integer type : c
 At line no: 51 factor : CONST_INT 
 
 5
@@ -1973,7 +1909,6 @@ At line no: 51 expression : variable ASSIGNOP logic_expression
 
 c[1]=5
 
-Error at line 51: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 51 expression_statement : expression SEMICOLON 
 
 c[1]=5;
@@ -2028,7 +1963,7 @@ At line no: 52 variable : ID LTHIRD expression RTHIRD
 
 c[1]
 
-Error at line 52: array index is not of integer type : c
+Error at line no: 52 : array index is not of integer type : c
 At line no: 52 factor : variable 
 
 c[1]
@@ -2065,8 +2000,7 @@ At line no: 52 factor : ID LPAREN argument_list RPAREN
 
 foo4(c[1])
 
-Error at line 52: operation on void type 
-Error at line 52: argument 1 type mismatch in function call: foo4
+Error at line no: 52 : operation on void type
 At line no: 52 unary_expression : factor 
 
 foo4(c[1])
@@ -2146,7 +2080,7 @@ At line no: 53 variable : ID LTHIRD expression RTHIRD
 
 c[2]
 
-Error at line 53: array index is not of integer type : c
+Error at line no: 53 : array index is not of integer type : c
 At line no: 53 factor : CONST_INT 
 
 1
@@ -2179,7 +2113,7 @@ At line no: 53 variable : ID LTHIRD expression RTHIRD
 
 c[1]
 
-Error at line 53: array index is not of integer type : c
+Error at line no: 53 : array index is not of integer type : c
 At line no: 53 factor : variable 
 
 c[1]
@@ -2216,8 +2150,7 @@ At line no: 53 factor : ID LPAREN argument_list RPAREN
 
 foo4(c[1])
 
-Error at line 53: operation on void type 
-Error at line 53: argument 1 type mismatch in function call: foo4
+Error at line no: 53 : operation on void type
 At line no: 53 unary_expression : factor 
 
 foo4(c[1])
@@ -2242,7 +2175,6 @@ At line no: 53 expression : variable ASSIGNOP logic_expression
 
 c[2]=foo4(c[1])
 
-Error at line 53: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 53 expression_statement : expression SEMICOLON 
 
 c[2]=foo4(c[1]);
@@ -2299,7 +2231,7 @@ At line no: 54 variable : ID LTHIRD expression RTHIRD
 
 c[3]
 
-Error at line 54: array index is not of integer type : c
+Error at line no: 54 : array index is not of integer type : c
 At line no: 54 factor : CONST_FLOAT 
 
 2.7
@@ -2328,7 +2260,6 @@ At line no: 54 expression : variable ASSIGNOP logic_expression
 
 c[3]=2.7
 
-Error at line 54: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 54 expression_statement : expression SEMICOLON 
 
 c[3]=2.7;
@@ -2382,8 +2313,8 @@ At line no: 55 term : term MULOP unary_expression
 
 5%0
 
-Error at line 55: Modulus operator on non integer type
-Error at line 55: Modulus by 0 
+Error at line no: 55 : Modulus operator on non integer type
+Error at line no: 55 : Modulus by 0 
 At line no: 55 simple_expression : term 
 
 5%0
@@ -2454,7 +2385,7 @@ At line no: 56 term : term MULOP unary_expression
 
 2%3.5
 
-Error at line 56: Modulus operator on non integer type
+Error at line no: 56 : Modulus operator on non integer type
 At line no: 56 simple_expression : term 
 
 2%3.5
@@ -2542,7 +2473,7 @@ At line no: 58 factor : ID LPAREN argument_list RPAREN
 
 foo5(a)
 
-Error at line 58: Undeclared function: foo5
+Error at line no: 58 : Undeclared function: foo5
 At line no: 58 unary_expression : factor 
 
 foo5(a)
@@ -2567,7 +2498,6 @@ At line no: 58 expression : variable ASSIGNOP logic_expression
 
 dd=foo5(a)
 
-Error at line 58: Type mismatch in assignment. int variable cannot be assigned  value
 At line no: 58 expression_statement : expression SEMICOLON 
 
 dd=foo5(a);
@@ -2600,6 +2530,7 @@ At line no: 60 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 
 printf(h);
 
+Error at line no: 60 : Undeclared variable h
 At line no: 60 statements : statements statement 
 
 int a,b,c[4],dd,ee;
@@ -2653,7 +2584,6 @@ At line no: 61 statement : RETURN expression SEMICOLON
 
 return 0;
 
-Exiting scope with ID: 0
 At line no: 61 statements : statements statement 
 
 int a,b,c[4],dd,ee;
@@ -2700,48 +2630,28 @@ printf(h);
 return 0;
 }
 
-Entered new scope with ID: 0
-Exiting scope with ID: 0
-Current state of the symbol table after exiting scope:
+Exiting scope with ID: 11
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 19
---------------------------------
-ScopeTable # 18
+ScopeTable # 11
 Index 0 : < dd, int, Variable > 
 Index 1 : < e, void, Variable > 
 Index 2 : < ee, int, Variable > 
-Index 7 : < a, int, Variable > 
 Index 8 : < b, int, Variable > 
 Index 9 : < c, int, Array, size: 4 > 
 --------------------------------
-ScopeTable # 16
-Index 6 : < foo4, void, Function > 
---------------------------------
-ScopeTable # 14
-Index 9 : < var, int, Function > 
---------------------------------
-ScopeTable # 12
-Index 2 : < z, int, Function > 
---------------------------------
-ScopeTable # 10
-Index 5 : < foo3, void, Function > 
---------------------------------
-ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
---------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
-Index 1 : < y, int, Variable > 
+Index 1 : < y, int, Variable > < main, int, Function > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
+Index 6 : < foo4, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
+Index 9 : < var, int, Function > 
 --------------------------------
 ScopeTable # 1
 --------------------------------
@@ -2772,7 +2682,6 @@ printf(h);
 return 0;
 }
 
-Entered new scope with ID: 0
 At line no: 64 unit : func_definition 
 
 int main()
@@ -2863,43 +2772,17 @@ Symbol Table
 
 ################################
 
-ScopeTable # 20
---------------------------------
-ScopeTable # 18
-Index 0 : < dd, int, Variable > 
-Index 1 : < e, void, Variable > < main, int, Function > 
-Index 2 : < ee, int, Variable > 
-Index 7 : < a, int, Variable > 
-Index 8 : < b, int, Variable > 
-Index 9 : < c, int, Array, size: 4 > 
---------------------------------
-ScopeTable # 16
-Index 6 : < foo4, void, Function > 
---------------------------------
-ScopeTable # 14
-Index 9 : < var, int, Function > 
---------------------------------
-ScopeTable # 12
-Index 2 : < z, int, Function > 
---------------------------------
-ScopeTable # 10
-Index 5 : < foo3, void, Function > 
---------------------------------
-ScopeTable # 8
-Index 4 : < foo2, int, Function > 
---------------------------------
-ScopeTable # 6
-Index 4 : < foo, void, Function > 
---------------------------------
-ScopeTable # 4
-Index 3 : < correct_foo, int, Function > 
---------------------------------
 ScopeTable # 2
 Index 0 : < x, int, Variable > 
-Index 1 : < y, int, Variable > 
+Index 1 : < y, int, Variable > < main, int, Function > 
 Index 2 : < z, int, Variable > 
+Index 3 : < correct_foo, int, Function > 
+Index 4 : < foo, void, Function > < foo2, int, Function > 
+Index 5 : < foo3, void, Function > 
+Index 6 : < foo4, void, Function > 
 Index 7 : < a, float, Variable > 
 Index 8 : < func, int, Function > 
+Index 9 : < var, int, Function > 
 --------------------------------
 ScopeTable # 1
 --------------------------------
@@ -2909,4 +2792,4 @@ ScopeTable # 1
 
 
 Total lines: 65
-Total errors: 38
+Total error lines: 19

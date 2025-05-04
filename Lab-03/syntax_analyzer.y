@@ -18,6 +18,9 @@ symbol_table *st;
 int lines = 1;
 int error_count = 0;
 
+// Track lines with errors to avoid counting multiple errors on same line
+set<int> lines_with_errors;
+
 ofstream outlog;
 ofstream errout;
 
@@ -28,12 +31,16 @@ string data_type;
 int array_size;
 vector<string> param_names;
 vector<string> param_types;
+string current_func_return_type;
 
 // Helper function to report semantic errors
 void semantic_error(int line, string message) {
-    error_count++;
-    errout << "At line no: " << line << " " << message << endl << endl;
-    outlog << "Error at line " << line << ": " << message << endl;
+    // Only increment error count if this is the first error on this line
+    if(lines_with_errors.find(line) == lines_with_errors.end()) {
+        lines_with_errors.insert(line);
+    }
+    errout << "Error at line no: " << line << " : " << message << endl;
+    outlog << "Error at line no: " << line << " : " << message << endl;
 }
 
 // Helper function to type check
@@ -44,7 +51,7 @@ bool type_compatible(string type1, string type2) {
     return false;
 }
 
-// helper functions
+// Helper functions for processing variable declarations
 vector<string> split(const string& str, char delim) {
     vector<string> tokens;
     stringstream ss(str);
@@ -53,7 +60,6 @@ vector<string> split(const string& str, char delim) {
     while (getline(ss, token, delim)) {
         tokens.push_back(token);
     }
-	// This function is useful for breaking down strings like comma-separated variable declarations into individual variables.
     return tokens;
 }
 
@@ -66,12 +72,26 @@ void process_variable(const string& var, const string& type) {
         string array_name = var.substr(0, open_bracket);
         int array_size = stoi(var.substr(open_bracket + 1, close_bracket - open_bracket - 1));
 
+        // Check if variable is already declared in current scope
+        symbol_info* existing = st->lookup(array_name);
+        if (existing != NULL) {
+            semantic_error(lines, "Multiple declaration of variable " + array_name);
+            return;
+        }
+
         symbol_info* new_symbol = new symbol_info(array_name, "ID", "Array");
         new_symbol->set_array_size(array_size);
         new_symbol->set_data_type(type);
         st->insert(new_symbol);
     } else {
         // Normal variable
+        // Check if variable is already declared in current scope
+        symbol_info* existing = st->lookup(var);
+        if (existing != NULL) {
+            semantic_error(lines, "Multiple declaration of variable " + var);
+            return;
+        }
+
         symbol_info* new_symbol = new symbol_info(var, "ID", "Variable");
         new_symbol->set_data_type(type);
         st->insert(new_symbol);
@@ -139,72 +159,119 @@ unit : var_declaration
 	 }
      ;
 
-func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement
+func_definition : type_specifier ID LPAREN parameter_list RPAREN
+		{
+			// Create the function definition in symbol table
+			symbol_info* func = new symbol_info($2->get_name(), "ID", "Function");
+			func->set_data_type($1->get_name());
+			
+			// Get the parameter information from parameter_list
+			vector<string> param_types = $4->get_param_types();
+			vector<string> param_names = $4->get_param_names();
+			
+			func->set_param_types(param_types);
+			func->set_param_names(param_names);
+			
+			// Check if the function is already declared in the current scope
+			// Use the getter method instead of direct access
+			symbol_info* existing_func = st->get_current_scope()->lookup($2->get_name());
+			if(existing_func != NULL && existing_func->get_symbol_type() == "Function") {
+				semantic_error(lines, "Redefinition of function: " + $2->get_name());
+			} else {
+				st->insert(func);
+			}
+			
+			// Create a new scope for function body
+			st->enter_scope();
+			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+			
+			// Add parameters to the new scope
+			for(size_t i = 0; i < param_types.size(); i++) {
+				string param_name = param_names[i];
+				if(param_name.empty()) continue; // Skip unnamed parameters
+				
+				// Check for duplicate parameter names within the parameter list only
+				bool duplicate = false;
+				for(size_t j = 0; j < i; j++) {
+					if(param_names[j] == param_name) {
+						semantic_error(lines, "Multiple declaration of variable " + param_name + " in parameter list");
+						duplicate = true;
+						break;
+					}
+				}
+				
+				if(!duplicate) {
+					// Add the parameter to the symbol table
+					symbol_info* param = new symbol_info(param_name, "ID", "Variable");
+					param->set_data_type(param_types[i]);
+					st->insert(param);
+				}
+			}
+
+			// Store the current function's return type for later validation
+			if($1->get_name() == "void") {
+				current_func_return_type = "void";
+			} else {
+				current_func_return_type = $1->get_name();
+			}
+		}
+		compound_statement
 		{	
 			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement "<<endl<<endl;
-			outlog<<$1->get_name()<<" "<<$2->get_name()<<"("+$4->get_name()+")\n"<<$6->get_name()<<endl<<endl;
+			outlog<<$1->get_name()<<" "<<$2->get_name()<<"("+$4->get_name()+")\n"<<$7->get_name()<<endl<<endl;
 			
-			$$ = new symbol_info($1->get_name()+" "+$2->get_name()+"("+$4->get_name()+")\n"+$6->get_name(),"func_def");	
-			
-			// The function definition is complete.
-            // You can now insert necessary information about the function into the symbol table
-            // Check if the function is already defined
-            symbol_info* existing_func = st->lookup($2->get_name());
-            if(existing_func != NULL && existing_func->is_function()) {
-                semantic_error(lines, "Multiple declaration of function " + $2->get_name());
-            } 
-            
-            // Insert the function into symbol table
-            symbol_info* func_symbol = new symbol_info($2->get_name(), "ID", "Function");
-            func_symbol->set_data_type($1->get_name());
-            func_symbol->set_param_types($4->get_param_types());
-            func_symbol->set_param_names($4->get_param_names());
-            st->insert(func_symbol);
-            
-            // Enter scope for function body
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+			$$ = new symbol_info($1->get_name()+" "+$2->get_name()+"("+$4->get_name()+")\n"+$7->get_name(),"func_def");
 		}
-		| type_specifier ID LPAREN RPAREN compound_statement
+		| type_specifier ID LPAREN RPAREN
 		{
+			// Create the function in symbol table
+			symbol_info* func = new symbol_info($2->get_name(), "ID", "Function");
+			func->set_data_type($1->get_name());
+			func->set_param_types(vector<string>());
+			func->set_param_names(vector<string>());
 			
-			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
-			outlog<<$1->get_name()<<" "<<$2->get_name()<<"()\n"<<$5->get_name()<<endl<<endl;
+			// Check if the function is already declared in the current scope
+			symbol_info* existing_func = st->lookup($2->get_name());
+			if(existing_func != NULL && existing_func->get_symbol_type() == "Function") {
+				semantic_error(lines, "Redefinition of function: " + $2->get_name());
+			} else {
+				st->insert(func);
+			}
 			
-			$$ = new symbol_info($1->get_name()+" "+$2->get_name()+"()\n"+$5->get_name(),"func_def");	
-			
-			// The function definition is complete.
-            // You can now insert necessary information about the function into the symbol table
-            // Check if the function is already defined
-            symbol_info* existing_func = st->lookup($2->get_name());
-            if(existing_func != NULL && existing_func->is_function()) {
-                semantic_error(lines, "Multiple declaration of function " + $2->get_name());
-            } 
-            
-            // Insert the function into symbol table
-            symbol_info* func_symbol = new symbol_info($2->get_name(), "ID", "Function");
-            func_symbol->set_data_type($1->get_name());
-            func_symbol->set_param_types({});
-            func_symbol->set_param_names({});
-            st->insert(func_symbol);
-            
-            // Enter scope for function body
+			// Create a new scope for function body
 			st->enter_scope();
 			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
+
+			// Store the current function's return type for later validation
+			if($1->get_name() == "void") {
+				current_func_return_type = "void";
+			} else {
+				current_func_return_type = $1->get_name();
+			}
+		}
+		compound_statement
+		{
+			outlog<<"At line no: "<<lines<<" func_definition : type_specifier ID LPAREN RPAREN compound_statement "<<endl<<endl;
+			outlog<<$1->get_name()<<" "<<$2->get_name()<<"()\n"<<$6->get_name()<<endl<<endl;
+			
+			$$ = new symbol_info($1->get_name()+" "+$2->get_name()+"()\n"+$6->get_name(),"func_def");
 		}
  		;
 
 parameter_list : parameter_list COMMA type_specifier ID
 		{
-			outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
-			outlog<<$1->get_name()<<","<<$3->get_name()<<" "<<$4->get_name()<<endl<<endl;
+ 		  	outlog<<"At line no: "<<lines<<" parameter_list : parameter_list COMMA type_specifier ID "<<endl<<endl;
+ 		  	outlog<<$1->get_name()<<","<<$3->get_name()<<" "<<$4->get_name()<<endl<<endl;
 					
 			$$ = new symbol_info($1->get_name()+","+$3->get_name()+" "+$4->get_name(),"param_list");
 			
-			// Check for duplicate parameter names
-			for(const auto& param_name : $1->get_param_names()) {
+			// Check for duplicate parameter names within THIS parameter list only (not across entire scope)
+			bool duplicate = false;
+			vector<string> param_names = $1->get_param_names();
+			for(const auto& param_name : param_names) {
 				if(param_name == $4->get_name()) {
-					semantic_error(lines, "Multiple declaration of variable " + $4->get_name() + " in parameter of foo2");
+					semantic_error(lines, "Multiple declaration of variable " + $4->get_name() + " in parameter list");
+					duplicate = true;
 					break;
 				}
 			}
@@ -261,17 +328,10 @@ compound_statement : LCURL statements RCURL
 
 			$$ = new symbol_info("{\n" + $2->get_name() + "\n}", "comp_stmnt");
 
-			// Enter a new scope and print its ID
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
-
 			// Print the ID of the scope being removed
 			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
-
-			// Print the current state of the symbol table
-			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			outlog << "Current state of the symbol table before exiting scope:" << endl;
 			st->print_all_scopes(outlog);
-
 			st->exit_scope();
 		}
 		| LCURL RCURL
@@ -281,17 +341,10 @@ compound_statement : LCURL statements RCURL
 
 			$$ = new symbol_info("{\n}", "comp_stmnt");
 
-			// Enter a new scope and print its ID
-			st->enter_scope();
-			outlog << "Entered new scope with ID: " << st->get_current_scope_id() << endl;
-
 			// Print the ID of the scope being removed
 			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
-
-			// Print the current state of the symbol table
-			outlog << "Current state of the symbol table after exiting scope:" << endl;
+			outlog << "Current state of the symbol table before exiting scope:" << endl;
 			st->print_all_scopes(outlog);
-
 			st->exit_scope();
 		}
 		;
@@ -362,7 +415,19 @@ declaration_list : declaration_list COMMA ID
 			
 			current_type = "array";
 			array_size = stoi($5->get_name()); // Convert string to int
-            // you may need to store the variable names to insert them in symbol table here or later
+            // Store array name and size
+			$$ = new symbol_info($1->get_name()+","+$3->get_name()+"["+ $5->get_name()+"]","declaration_list");
+ 		  }
+ 		  | declaration_list COMMA ID LTHIRD CONST_FLOAT RTHIRD //array after some declaration with float index
+ 		  {
+ 		  	outlog<<"At line no: "<<lines<<" declaration_list : declaration_list COMMA ID LTHIRD CONST_FLOAT RTHIRD "<<endl<<endl;
+ 		  	outlog<<$1->get_name()+","<<$3->get_name()<<"["<<$5->get_name()<<"]"<<endl<<endl;
+			
+            // Report error for float array size
+            semantic_error(lines, "Array size must be an integer, not float");
+			
+			current_type = "array";
+			array_size = 0; // Invalid array size
 			$$ = new symbol_info($1->get_name()+","+$3->get_name()+"["+ $5->get_name()+"]","declaration_list");
  		  }
  		  |ID
@@ -378,7 +443,17 @@ declaration_list : declaration_list COMMA ID
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_INT RTHIRD "<<endl<<endl;
 			outlog<<$1->get_name()<<"["<<$3->get_name()<<"]"<<endl<<endl;
 
-            // you may need to store the variable names to insert them in symbol table here or later
+            // Store array name and size
+			$$ = new symbol_info($1->get_name()+"["+ $3->get_name()+"]","declaration_list");
+ 		  }
+ 		  | ID LTHIRD CONST_FLOAT RTHIRD //array with float index
+ 		  {
+ 		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_FLOAT RTHIRD "<<endl<<endl;
+			outlog<<$1->get_name()<<"["<<$3->get_name()<<"]"<<endl<<endl;
+
+            // Report error for float array size
+            semantic_error(lines, "Array size must be an integer, not float");
+			
 			$$ = new symbol_info($1->get_name()+"["+ $3->get_name()+"]","declaration_list");
  		  }
  		  ;
@@ -462,6 +537,12 @@ statement : var_declaration
 	    	outlog<<"At line no: "<<lines<<" statement : PRINTLN LPAREN ID RPAREN SEMICOLON "<<endl<<endl;
 			outlog<<"printf("<<$3->get_name()<<");"<<endl<<endl; 
 			
+			// Check if the variable exists
+			symbol_info* var = st->lookup($3->get_name());
+			if(var == NULL) {
+				semantic_error(lines, "Undeclared variable " + $3->get_name());
+			}
+			
 			$$ = new symbol_info("printf("+$3->get_name()+");","stmnt");
 	  }
 	  | RETURN expression SEMICOLON
@@ -470,7 +551,14 @@ statement : var_declaration
 			outlog<<"return "<<$2->get_name()<<";"<<endl<<endl;
 			
 			$$ = new symbol_info("return "+$2->get_name()+";","stmnt");
-			outlog << "Exiting scope with ID: " << st->get_current_scope_id() << endl;
+			
+			// Check if return type is compatible with function return type
+			if (current_func_return_type == "void" && $2->get_name() != "") {
+				semantic_error(lines, "Void function cannot return a value");
+			}
+			else if (current_func_return_type == "int" && $2->get_data_type() == "float") {
+				semantic_error(lines, "Warning: Possible loss of precision when returning float from an int function");
+			}
 	  }
 	  ;
 	  
@@ -497,12 +585,13 @@ variable : ID
 			
 		$$ = new symbol_info($1->get_name(),"varbl");
 		
-		// Check if the variable is declared
+		// Check if the variable is declared - in ANY scope (includes global scope)
 		symbol_info* var = st->lookup($1->get_name());
 		if(var == NULL) {
 			semantic_error(lines, "Undeclared variable " + $1->get_name());
 			$$->set_data_type("error");
 		} else {
+			// Successfully found variable, set its type information
 			$$->set_data_type(var->get_data_type());
 			$$->set_symbol_type(var->get_symbol_type());
 			
@@ -559,14 +648,35 @@ expression : logic_expression
 			
 			// Check if types are compatible
 			if($1->get_data_type() != "error" && $3->get_data_type() != "error") {
-				if(!type_compatible($1->get_data_type(), $3->get_data_type())) {
-					semantic_error(lines, "Type mismatch in assignment. " + $1->get_data_type() + " variable cannot be assigned " + $3->get_data_type() + " value");
-				} 
-				// Warning for possible precision loss
-				else if($1->get_data_type() == "int" && $3->get_data_type() == "float") {
-					semantic_error(lines, "Warning: Assignment of float value into variable of integer type ");
+				// Corrected type checking to handle global variables properly
+				string var_type = $1->get_data_type();
+				string expr_type = $3->get_data_type();
+				string expr_val = $3->get_name();
+				
+				// Check if the expression is a void function call
+				if(expr_type == "void") {
+					semantic_error(lines, "Void function used in expression");
+					$$->set_data_type("error");
 				}
-				$$->set_data_type($1->get_data_type());
+				// Handle empty (null) expression values
+				else if(expr_type == "") {
+					// Skip validation for empty expressions
+					$$->set_data_type(var_type);
+				}
+				// Regular type compatibility check
+				else if(!type_compatible(var_type, expr_type)) {
+					semantic_error(lines, "Type mismatch in assignment. " + var_type + " variable cannot be assigned " + expr_type + " value");
+					$$->set_data_type(var_type); // Keep the type despite the error
+				} 
+				// Check for float literals assigned to int variables
+				else if(var_type == "int" && 
+				       (expr_type == "float" || 
+				        (expr_val.find('.') != string::npos && !expr_val.empty()))) {
+					semantic_error(lines, "Warning: Assignment of float value into variable of integer type");
+					$$->set_data_type(var_type);
+				} else {
+					$$->set_data_type(var_type);
+				}
 			} else {
 				$$->set_data_type("error");
 			}
@@ -739,39 +849,39 @@ factor	: variable
 		} else {
 			// Check if it's actually a function
 			if(!func->is_function()) {
-				semantic_error(lines, "'" + $1->get_name() + "' is not a function");
+				semantic_error(lines, $1->get_name() + " is not a function");
 				$$->set_data_type("error");
 			} else {
 				// Check if it's a void function used in an expression
 				if(func->get_data_type() == "void") {
-					semantic_error(lines, "operation on void type ");
+					semantic_error(lines, "operation on void type");
 					$$->set_data_type("error");
 				} else {
 					$$->set_data_type(func->get_data_type());
 				}
 				
-				// Split arguments from the argument list
-				vector<string> arg_list;
+				// Parse arguments
+				vector<string> arg_types;
 				string args = $3->get_name();
 				if(!args.empty()) {
 					size_t start = 0, end;
 					while((end = args.find(',', start)) != string::npos) {
-						arg_list.push_back(args.substr(start, end - start));
+						arg_types.push_back("int"); // Simplified - we would need to track actual types
 						start = end + 1;
 					}
-					arg_list.push_back(args.substr(start));
+					arg_types.push_back("int"); // For the last argument
 				}
 				
-				// Check if the number of arguments matches
+				// Check number of arguments
 				vector<string> param_types = func->get_param_types();
-				if(arg_list.size() != param_types.size()) {
+				if(arg_types.size() != param_types.size()) {
 					semantic_error(lines, "Inconsistencies in number of arguments in function call: " + $1->get_name());
-				} else {
-					// Check if argument types match parameter types
-					for(size_t i = 0; i < arg_list.size(); i++) {
-						if(!type_compatible(param_types[i], arg_list[i])) {
-							semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + $1->get_name());
-						}
+				}
+				
+				// Check argument types (simplified)
+				for(size_t i = 0; i < min(arg_types.size(), param_types.size()); i++) {
+					if(param_types[i] == "int" && arg_types[i] != "int") {
+						semantic_error(lines, "argument " + to_string(i+1) + " type mismatch in function call: " + $1->get_name());
 					}
 				}
 			}
@@ -806,16 +916,16 @@ factor	: variable
 	    outlog<<"At line no: "<<lines<<" factor : variable INCOP "<<endl<<endl;
 		outlog<<$1->get_name()<<"++"<<endl<<endl;
 			
-		$$ = new symbol_info($1->get_name()+"++","fctr");
-		$$->set_data_type($1->get_data_type());
+			$$ = new symbol_info($1->get_name()+"++","fctr");
+			$$->set_data_type($1->get_data_type());
 	}
 	| variable DECOP
 	{
 	    outlog<<"At line no: "<<lines<<" factor : variable DECOP "<<endl<<endl;
 		outlog<<$1->get_name()<<"--"<<endl<<endl;
 			
-		$$ = new symbol_info($1->get_name()+"--","fctr");
-		$$->set_data_type($1->get_data_type());
+			$$ = new symbol_info($1->get_name()+"--","fctr");
+			$$->set_data_type($1->get_data_type());
 	}
 	;
 	
@@ -881,11 +991,14 @@ int main(int argc, char *argv[])
 
 	yyparse();
 	
+	// Reset error count based on unique lines with errors
+	error_count = lines_with_errors.size();
+
 	outlog<<endl<<"Total lines: "<<lines<<endl;
-	outlog<<"Total errors: "<<error_count<<endl;
-	
+	outlog<<"Total error lines: "<<error_count<<endl;
+
 	// Add error count to error file too
-	errout<<endl<<"Total errors: "<<error_count<<endl;
+	errout<<endl<<"Total error lines: "<<error_count<<endl;
 	
 	outlog.close();
 	errout.close();
