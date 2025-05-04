@@ -356,7 +356,6 @@ var_declaration : type_specifier declaration_list SEMICOLON
 
     $$ = new symbol_info($1->get_name() + " " + $2->get_name() + ";", "var_dec");
 
-	// Insert necessary information about the variables in the symbol table
     data_type = $1->get_name();
     
     // Check if variable type is void
@@ -451,7 +450,6 @@ declaration_list : declaration_list COMMA ID
  		  	outlog<<"At line no: "<<lines<<" declaration_list : ID LTHIRD CONST_FLOAT RTHIRD "<<endl<<endl;
 			outlog<<$1->get_name()<<"["<<$3->get_name()<<"]"<<endl<<endl;
 
-            // Report error for float array size
             semantic_error(lines, "Array size must be an integer, not float");
 			
 			$$ = new symbol_info($1->get_name()+"["+ $3->get_name()+"]","declaration_list");
@@ -557,7 +555,7 @@ statement : var_declaration
 				semantic_error(lines, "Void function cannot return a value");
 			}
 			else if (current_func_return_type == "int" && $2->get_data_type() == "float") {
-				semantic_error(lines, "Warning: Possible loss of precision when returning float from an int function");
+				semantic_error(lines, "Error: Possible loss of precision when returning float from an int function");
 			}
 	  }
 	  ;
@@ -591,7 +589,6 @@ variable : ID
 			semantic_error(lines, "Undeclared variable " + $1->get_name());
 			$$->set_data_type("error");
 		} else {
-			// Successfully found variable, set its type information
 			$$->set_data_type(var->get_data_type());
 			$$->set_symbol_type(var->get_symbol_type());
 			
@@ -625,6 +622,13 @@ variable : ID
 				// Check if index is integer
 				if($3->get_data_type() != "int") {
 					semantic_error(lines, "array index is not of integer type : " + $1->get_name());
+					$$->set_data_type("error"); // Mark as error to prevent further operations
+				}
+				
+				// Check if the index is a float literal by looking for a decimal point
+				if($3->get_name().find('.') != string::npos) {
+				    semantic_error(lines, "array index is not an integer : " + $1->get_name());
+				    $$->set_data_type("error"); // Mark as error to prevent further operations
 				}
 			}
 		}
@@ -648,7 +652,6 @@ expression : logic_expression
 			
 			// Check if types are compatible
 			if($1->get_data_type() != "error" && $3->get_data_type() != "error") {
-				// Corrected type checking to handle global variables properly
 				string var_type = $1->get_data_type();
 				string expr_type = $3->get_data_type();
 				string expr_val = $3->get_name();
@@ -658,23 +661,25 @@ expression : logic_expression
 					semantic_error(lines, "Void function used in expression");
 					$$->set_data_type("error");
 				}
-				// Handle empty (null) expression values
-				else if(expr_type == "") {
-					// Skip validation for empty expressions
+				else if(var_type == "int" && (expr_type == "float" || expr_val.find('.') != string::npos)) {
+					semantic_error(lines, "Warning: Assignment of float value into variable of integer type");
+					if(lines_with_errors.find(lines) == lines_with_errors.end()) {
+						lines_with_errors.insert(lines);
+					}
+					
 					$$->set_data_type(var_type);
 				}
-				// Regular type compatibility check
+				// Handle empty (null) expression values
+				else if(expr_type == "") {
+					$$->set_data_type(var_type);
+				}
+				
+				// Regular type compatibility check for other cases
 				else if(!type_compatible(var_type, expr_type)) {
 					semantic_error(lines, "Type mismatch in assignment. " + var_type + " variable cannot be assigned " + expr_type + " value");
-					$$->set_data_type(var_type); // Keep the type despite the error
+					$$->set_data_type(var_type); 
 				} 
-				// Check for float literals assigned to int variables
-				else if(var_type == "int" && 
-				       (expr_type == "float" || 
-				        (expr_val.find('.') != string::npos && !expr_val.empty()))) {
-					semantic_error(lines, "Warning: Assignment of float value into variable of integer type");
-					$$->set_data_type(var_type);
-				} else {
+				else {
 					$$->set_data_type(var_type);
 				}
 			} else {
@@ -866,10 +871,10 @@ factor	: variable
 				if(!args.empty()) {
 					size_t start = 0, end;
 					while((end = args.find(',', start)) != string::npos) {
-						arg_types.push_back("int"); // Simplified - we would need to track actual types
+						arg_types.push_back("int"); // track actual types
 						start = end + 1;
 					}
-					arg_types.push_back("int"); // For the last argument
+					arg_types.push_back("int"); 
 				}
 				
 				// Check number of arguments

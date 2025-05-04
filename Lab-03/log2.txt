@@ -1,5 +1,4 @@
-New ScopeTable with ID 1 created
-
+Entered new scope with ID: 2
 At line no: 1 type_specifier : INT 
 
 int
@@ -12,8 +11,7 @@ At line no: 1 parameter_list : type_specifier ID
 
 int a
 
-New ScopeTable with ID 2 created
-
+Entered new scope with ID: 3
 At line no: 2 variable : ID 
 
 a
@@ -60,26 +58,19 @@ At line no: 3 compound_statement : LCURL statements RCURL
 return a;
 }
 
+Exiting scope with ID: 3
+Current state of the symbol table before exiting scope:
 ################################
 
+ScopeTable # 3
+Index 7 : < a, int, Variable > 
+--------------------------------
 ScopeTable # 2
-7 --> 
-< a : ID >
-Variable
-Type: int
-
-
+Index 8 : < func, int, Function > 
+--------------------------------
 ScopeTable # 1
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 1
-Parameter Details: int a
-
+--------------------------------
 ################################
-
-Scopetable with ID 2 removed
 
 At line no: 3 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement 
 
@@ -106,8 +97,7 @@ At line no: 5 type_specifier : INT
 
 int
 
-New ScopeTable with ID 3 created
-
+Entered new scope with ID: 4
 At line no: 6 type_specifier : INT 
 
 int
@@ -152,8 +142,7 @@ At line no: 6 var_declaration : type_specifier declaration_list SEMICOLON
 
 float c;
 
-At line no: 6 Multiple declaration of variable c
-
+Error at line no: 6 : Multiple declaration of variable c
 At line no: 6 statement : var_declaration 
 
 float c;
@@ -195,8 +184,8 @@ At line no: 7 variable : ID LTHIRD expression RTHIRD
 
 a[2.5]
 
-At line no: 7 array index is not of integer type : a
-
+Error at line no: 7 : array index is not of integer type : a
+Error at line no: 7 : array index is not an integer : a
 At line no: 7 factor : CONST_INT 
 
 1
@@ -271,8 +260,7 @@ At line no: 8 expression : variable ASSIGNOP logic_expression
 
 i=2.3
 
-At line no: 8 Warning: Assignment of float value into variable of integer type 
-
+Error at line no: 8 : Warning: Assignment of float value into variable of integer type
 At line no: 8 expression_statement : expression SEMICOLON 
 
 i=2.3;
@@ -316,8 +304,7 @@ At line no: 9 term : term MULOP unary_expression
 
 2%3.7
 
-At line no: 9 Modulus operator on non integer type 
-
+Error at line no: 9 : Modulus operator on non integer type
 At line no: 9 simple_expression : term 
 
 2%3.7
@@ -354,8 +341,7 @@ At line no: 10 variable : ID
 
 a
 
-At line no: 10 variable is of array type : a
-
+Error at line no: 10 : variable is of array type : a
 At line no: 10 factor : CONST_INT 
 
 4
@@ -405,8 +391,7 @@ At line no: 11 variable : ID
 
 a
 
-At line no: 11 variable is of array type : a
-
+Error at line no: 11 : variable is of array type : a
 At line no: 11 factor : variable 
 
 a
@@ -489,8 +474,7 @@ At line no: 12 variable : ID
 
 b
 
-At line no: 12 Undeclared variable b
-
+Error at line no: 12 : Undeclared variable b
 At line no: 12 factor : CONST_INT 
 
 8
@@ -596,48 +580,23 @@ b=8;
 return 0;
 }
 
+Exiting scope with ID: 4
+Current state of the symbol table before exiting scope:
 ################################
 
-ScopeTable # 3
-5 --> 
-< i : ID >
-Variable
-Type: int
-
-6 --> 
-< j : ID >
-Variable
-Type: int
-
-7 --> 
-< a : ID >
-Array
-Type: int
-Size: 2
-
-9 --> 
-< c : ID >
-Variable
-Type: int
-
-
+ScopeTable # 4
+Index 5 : < i, int, Variable > 
+Index 6 : < j, int, Variable > 
+Index 7 : < a, int, Array, size: 2 > 
+Index 9 : < c, int, Variable > 
+--------------------------------
+ScopeTable # 2
+Index 1 : < main, int, Function > 
+Index 8 : < func, int, Function > 
+--------------------------------
 ScopeTable # 1
-1 --> 
-< main : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 1
-Parameter Details: int a
-
+--------------------------------
 ################################
-
-Scopetable with ID 3 removed
 
 At line no: 14 func_definition : type_specifier ID LPAREN RPAREN compound_statement 
 
@@ -694,22 +653,16 @@ Symbol Table
 
 ################################
 
+ScopeTable # 2
+Index 1 : < main, int, Function > 
+Index 8 : < func, int, Function > 
+--------------------------------
 ScopeTable # 1
-1 --> 
-< main : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 0
-Parameter Details: 
-8 --> 
-< func : ID >
-Function Definition
-Return Type: int
-Number of Parameters: 1
-Parameter Details: int a
-
+--------------------------------
 ################################
 
 
+
+
 Total lines: 15
-Total errors: 7
+Total error lines: 7
